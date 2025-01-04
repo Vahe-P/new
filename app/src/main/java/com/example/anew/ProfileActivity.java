@@ -36,15 +36,12 @@ public class ProfileActivity extends AppCompatActivity {
         }
 
         // Initialize UI elements
-        userNameTextView = findViewById(R.id.userNameTextView);
         userEmailTextView = findViewById(R.id.userEmailTextView);
 
         // Set user information (e.g., name and email)
         if (currentUser != null) {
-            userNameTextView.setText(currentUser.getDisplayName() != null ? currentUser.getDisplayName() : "User Name");
             userEmailTextView.setText(currentUser.getEmail());
         } else {
-            userNameTextView.setText("User Name");
             userEmailTextView.setText("No email available");
         }
 

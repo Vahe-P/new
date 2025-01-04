@@ -3,7 +3,8 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp"
-    android:gravity="center_vertical">
+    android:gravity="center_vertical"
+    android:windowSoftInputMode="adjustResize">
 
     <!-- Email Input -->
     <EditText
@@ -31,8 +32,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Login"
-        android:layout_marginBottom="12dp"
-        android:contentDescription="Login to your account" />
+        android:layout_marginBottom="12dp" />
+
 
     <!-- Register Redirect -->
     <TextView
@@ -43,7 +44,6 @@
         android:text="Don't have an account? Sign Up"
         android:textColor="#0000FF"
         android:layout_marginBottom="12dp"
-        android:contentDescription="Redirect to Sign Up"
         android:clickable="true"
         android:focusable="true" />
 

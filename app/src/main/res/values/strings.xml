@@ -1,3 +1,17 @@
 <resources>
-    <string name="app_name">New</string>
+    <string name="app_name">Wanderly</string>
+
+    <string-array name="fromWhereArr">
+        <item>From My Place</item>
+        <item>Choose in map</item>
+    </string-array>
+
+    <string-array name="category_array">
+        <item>ALL</item>
+        <item>CHURCHES</item>
+        <item>MUSEUMS</item>
+        <item>PARKS</item>
+        <item>ATTRACTIONS</item>
+        <item>ART</item>
+    </string-array>
 </resources>

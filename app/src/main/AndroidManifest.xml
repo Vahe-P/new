@@ -3,8 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.example.anew">
 
-    <!-- Declare required permissions (if needed) -->
+    <!-- Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <application
         android:allowBackup="true"
@@ -17,7 +19,7 @@
         android:theme="@style/Theme.New"
         tools:targetApi="31">
 
-        <!-- Main Activity - Entry point of the app -->
+        <!-- Main Activity -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -41,6 +43,7 @@
         <activity
             android:name=".RegisterActivity"
             android:exported="true" />
+
 
     </application>
 </manifest>
