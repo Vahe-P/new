@@ -47,13 +47,10 @@ public class ProfileActivity extends AppCompatActivity {
 
         // Discover Button
         ImageButton discoverButton = findViewById(R.id.discoverButton);
-        discoverButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent discoverIntent = new Intent(ProfileActivity.this, MainActivity.class);
-                startActivity(discoverIntent);
-                finish(); // Close the ProfileActivity
-            }
+        discoverButton.setOnClickListener(v -> {
+            Intent intent = new Intent(ProfileActivity.this, MainActivity.class);
+            intent.putExtra("fromProfile", true); // Add the flag
+            startActivity(intent);
         });
 
         // Profile Button (Already in ProfileActivity, so does nothing)

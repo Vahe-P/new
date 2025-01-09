@@ -40,19 +40,17 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Check if the user is logged in using Firebase Authentication
-        if (FirebaseAuth.getInstance().getCurrentUser() == null) {
-            // User is not logged in, redirect to LoginActivity
+        boolean isGuest = getIntent().getBooleanExtra("isGuest", false);
+        boolean fromProfile = getIntent().getBooleanExtra("fromProfile", false);
+        if (!isGuest && FirebaseAuth.getInstance().getCurrentUser() == null && !fromProfile) {
             Intent loginIntent = new Intent(MainActivity.this, LoginActivity.class);
             startActivity(loginIntent);
-            finish();  // Prevent going back to MainActivity after login
+            finish();
             return;
         }
 
-        // If logged in, show MainActivity layout
         setContentView(R.layout.activity_main);
 
-        // Initialize UI elements for location and spinners
         textLocation = findViewById(R.id.text_location);
         searchBar = findViewById(R.id.searchBar);
         searchButton = findViewById(R.id.searchButton);
@@ -61,7 +59,6 @@ public class MainActivity extends AppCompatActivity {
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
-        // Set up the spinners
         ArrayAdapter<CharSequence> numberAdapter = ArrayAdapter.createFromResource(this,
                 R.array.fromWhereArr, android.R.layout.simple_spinner_item);
         numberAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -72,45 +69,28 @@ public class MainActivity extends AppCompatActivity {
         categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         categorySpinner.setAdapter(categoryAdapter);
 
-        // Search Button click listener
         searchButton.setOnClickListener(v -> {
             String searchValue = searchBar.getText().toString().trim();
             int radius = searchValue.isEmpty() ? 5 : Integer.parseInt(searchValue); // Default to 5 if empty
             String fromWhereChoice = fromWhereSpinner.getSelectedItem().toString();
-
-            if ("From My Place".equals(fromWhereChoice)) {
-                // Get current location if "From My Place" is chosen
-                if (userLocation != null) {
-                    String result = "Category: " + categorySpinner.getSelectedItem()+"\nRadius: " + radius + " km\nLocation: Latitude: " + userLocation.getLatitude()
-                            + "\nLongitude: " + userLocation.getLongitude();
-                    textLocation.setText(result);
-                } else {
-                    textLocation.setText("Location not available");
-                }
-            } else {
-                // Handle other cases when "From My Place" is not selected
-                textLocation.setText("Radius: " + radius + " km\n Category: " + categorySpinner.getSelectedItem());
-            }
+            double userLongitude = userLocation != null ? userLocation.getLongitude() : 0;
+            double userLatitude = userLocation != null ? userLocation.getLatitude() : 0;
         });
 
-        // Discover Button
         ImageButton discoverButton = findViewById(R.id.discoverButton);
         discoverButton.setOnClickListener(v -> {
-            // Handle discover button click (Add functionality later)
+
         });
 
-        // Profile Button
         ImageButton profileButton = findViewById(R.id.profileButton);
         profileButton.setOnClickListener(v -> {
             Intent profileIntent = new Intent(MainActivity.this, ProfileActivity.class);
             startActivity(profileIntent);
         });
 
-        // Get the user's current location if needed
         getLocation();
     }
 
-    // Method to get the user's current location
     private void getLocation() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -122,13 +102,7 @@ public class MainActivity extends AppCompatActivity {
                     .addOnSuccessListener(this, new OnSuccessListener<Location>() {
                         @Override
                         public void onSuccess(Location location) {
-                            if (location != null) {
-                                userLocation = location;
-                                textLocation.setText("Location: Latitude: " + location.getLatitude()
-                                        + ", Longitude: " + location.getLongitude());
-                            } else {
-                                textLocation.setText("Location not available");
-                            }
+                            userLocation = location;
                         }
                     });
         }
@@ -141,8 +115,6 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 getLocation();
-            } else {
-                textLocation.setText("Permission denied");
             }
         }
     }
