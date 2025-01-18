@@ -29,23 +29,19 @@ public class ProfileActivity extends AppCompatActivity {
         firebaseAuth = FirebaseAuth.getInstance();
         currentUser = firebaseAuth.getCurrentUser();
 
-        // Enable back navigation in the ActionBar
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setTitle("Profile");
         }
 
-        // Initialize UI elements
         userEmailTextView = findViewById(R.id.userEmailTextView);
 
-        // Set user information (e.g., name and email)
         if (currentUser != null) {
             userEmailTextView.setText(currentUser.getEmail());
         } else {
             userEmailTextView.setText("No email available");
         }
 
-        // Discover Button
         ImageButton discoverButton = findViewById(R.id.discoverButton);
         discoverButton.setOnClickListener(v -> {
             Intent intent = new Intent(ProfileActivity.this, MainActivity.class);
@@ -53,7 +49,6 @@ public class ProfileActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // Profile Button (Already in ProfileActivity, so does nothing)
         ImageButton profileButton = findViewById(R.id.profileButton);
         profileButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -62,7 +57,6 @@ public class ProfileActivity extends AppCompatActivity {
             }
         });
 
-        // Logout Button with confirmation dialog
         Button logoutButton = findViewById(R.id.btn_logout);
         logoutButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -74,7 +68,7 @@ public class ProfileActivity extends AppCompatActivity {
 
     @Override
     public boolean onSupportNavigateUp() {
-        finish(); // Close the current activity to navigate back
+        finish(); 
         return true;
     }
 
@@ -85,10 +79,9 @@ public class ProfileActivity extends AppCompatActivity {
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
-                        // Sign out from Firebase
+                        
                         FirebaseAuth.getInstance().signOut();
 
-                        // Navigate to LoginActivity
                         Intent loginIntent = new Intent(ProfileActivity.this, LoginActivity.class);
                         loginIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK); // Clear activity stack
                         startActivity(loginIntent);
