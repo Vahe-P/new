@@ -15,7 +15,6 @@
         android:gravity="center_horizontal"
         android:layout_marginBottom="20dp">
 
-        <!-- User Name Text -->
 
 
         <TextView
@@ -30,7 +29,6 @@
 
     </LinearLayout>
 
-    <!-- Logout Button -->
     <Button
         android:id="@+id/btn_logout"
         android:layout_width="match_parent"
@@ -50,7 +48,6 @@
         android:background="#DDDDDD"
         android:padding="8dp">
 
-        <!-- Discover Button -->
         <ImageButton
             android:id="@+id/discoverButton"
             android:layout_width="0dp"
