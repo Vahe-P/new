@@ -5,12 +5,11 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
-import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Spinner;
-import android.widget.ArrayAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,20 +20,23 @@ import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.maps.GoogleMap;
 import com.google.firebase.auth.FirebaseAuth;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     private FusedLocationProviderClient fusedLocationProviderClient;
-    private TextView textLocation;
+    private TextView resultView;
+    private TextView recommendedText;
+    private GoogleMap googleMap;
 
     private Spinner fromWhereSpinner;
     private Spinner categorySpinner;
     private EditText searchBar;
     private Button searchButton;
     private Location userLocation;
+    String apiKey = "AIzaSyDfylRP2UhEe-kcDiigAiECbCqL1HAJ3I4";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,11 +53,12 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
-        textLocation = findViewById(R.id.text_location);
+        resultView = findViewById(R.id.text_location);
         searchBar = findViewById(R.id.searchBar);
         searchButton = findViewById(R.id.searchButton);
         fromWhereSpinner = findViewById(R.id.numberSpinner);
         categorySpinner = findViewById(R.id.categorySpinner);
+        recommendedText = findViewById(R.id.recommendedText);
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
@@ -70,17 +73,43 @@ public class MainActivity extends AppCompatActivity {
         categorySpinner.setAdapter(categoryAdapter);
 
         searchButton.setOnClickListener(v -> {
-            String searchValue = searchBar.getText().toString().trim();
-            int radius = searchValue.isEmpty() ? 5 : Integer.parseInt(searchValue); // Default to 5 if empty
-            String fromWhereChoice = fromWhereSpinner.getSelectedItem().toString();
-            double userLongitude = userLocation != null ? userLocation.getLongitude() : 0;
-            double userLatitude = userLocation != null ? userLocation.getLatitude() : 0;
+            recommendedText.setText("Result");
+            if (userLocation != null) {
+                String fromWhere = fromWhereSpinner.getSelectedItem().toString().toLowerCase();
+                double userLatitude = userLocation.getLatitude();
+                double userLongitude = userLocation.getLongitude();
+                int radius = searchBar.getText().toString().isEmpty() ? 5 : Integer.parseInt(searchBar.getText().toString());
+                String selectedCategory = categorySpinner.getSelectedItem().toString().toLowerCase();
+
+                CordinatesFinderChurches cordinatesFinderChurches=new CordinatesFinderChurches();
+                CordinatesFinderMuseums cordinatesFinderMuseums=new CordinatesFinderMuseums();
+                CordinatesFinderArtGalleries cordinatesFinderArtGalleries=new CordinatesFinderArtGalleries();
+                if (fromWhere.equals("from my place")) {
+                    switch (selectedCategory){
+                        case "churches":
+                            cordinatesFinderChurches.getChurchCoordinates(userLatitude, userLongitude, radius,apiKey,resultView);
+                            break;
+                        case "museums":
+                            cordinatesFinderMuseums.getMuseumCoordinates(userLatitude,userLongitude,radius,apiKey,resultView);
+                            break;
+                        case "art galleries":
+                            //cordinatesFinderArtGalleries.fetchAllNearbyArtGalleries(userLatitude,userLongitude,radius,resultView,googleMap);
+
+                    }
+
+                } else {
+                    double userLatitudeChoosen = 0;
+                    double userLongitudeChoosen = 0;
+                    cordinatesFinderChurches.getChurchCoordinates(userLatitudeChoosen, userLongitudeChoosen, radius,apiKey,resultView);
+                }
+            } else {
+
+                Toast.makeText(MainActivity.this, "Location not available. Please try again.", Toast.LENGTH_SHORT).show();
+            }
         });
 
         ImageButton discoverButton = findViewById(R.id.discoverButton);
-        discoverButton.setOnClickListener(v -> {
-
-        });
+        discoverButton.setOnClickListener(v -> {});
 
         ImageButton profileButton = findViewById(R.id.profileButton);
         profileButton.setOnClickListener(v -> {
@@ -99,12 +128,7 @@ public class MainActivity extends AppCompatActivity {
                     LOCATION_PERMISSION_REQUEST_CODE);
         } else {
             fusedLocationProviderClient.getLastLocation()
-                    .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                        @Override
-                        public void onSuccess(Location location) {
-                            userLocation = location;
-                        }
-                    });
+                    .addOnSuccessListener(this, location -> userLocation = location);
         }
     }
 

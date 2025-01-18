@@ -35,7 +35,7 @@
         android:layout_height="50dp"
         android:layout_below="@id/topBar"
         android:layout_margin="16dp"
-        android:hint="Enter radius"
+        android:hint="Enter radius(default 5)"
         android:padding="12dp"
         android:background="@android:drawable/edit_text"
         android:inputType="number"
@@ -118,12 +118,12 @@
             android:id="@+id/text_location"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Location will appear here"
-            android:textSize="18sp"
+            android:layout_alignParentBottom="true"
             android:layout_margin="16dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/button_location" />
+            android:background="#AAFFFFFF"
+            android:padding="8dp"
+            android:text="Coordinates will appear here"
+            android:textColor="#000000" />
     </LinearLayout>
 
     <!-- Bottom Navigation Buttons -->
