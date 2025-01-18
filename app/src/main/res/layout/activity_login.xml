@@ -6,7 +6,6 @@
     android:gravity="center_vertical"
     android:windowSoftInputMode="adjustResize">
 
-    <!-- Email Input -->
     <EditText
         android:id="@+id/email_login"
         android:layout_width="match_parent"
@@ -16,7 +15,6 @@
         android:layout_marginBottom="12dp"
         android:contentDescription="Enter your email address" />
 
-    <!-- Password Input -->
     <EditText
         android:id="@+id/password_login"
         android:layout_width="match_parent"
@@ -26,7 +24,6 @@
         android:layout_marginBottom="16dp"
         android:contentDescription="Enter your password" />
 
-    <!-- Login Button -->
     <Button
         android:id="@+id/btn_login"
         android:layout_width="match_parent"
@@ -41,7 +38,6 @@
         android:layout_marginBottom="12dp" />
 
 
-    <!-- Register Redirect -->
     <TextView
         android:id="@+id/register_redirect"
         android:layout_width="match_parent"
@@ -63,7 +59,7 @@
         android:textColor="#0000FF"
         android:clickable="true"
         android:focusable="true"/>
-    <!-- Optional: Progress Bar -->
+
     <ProgressBar
         android:id="@+id/login_progress"
         android:layout_width="wrap_content"
