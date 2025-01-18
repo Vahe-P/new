@@ -68,7 +68,6 @@ public class CordinatesFinderChurches {
                 "&destinations=" + destLat + "," + destLng +
                 "&key=" + apiKey;
 
-        // Log the radius and destination info for debugging
         Log.d("DEBUG", "Radius (in km): " + radius + " | Radius (in meters): " + (radius * 1000));
         Log.d("DEBUG", "User Location: (" + userLat + ", " + userLng + ")");
         Log.d("DEBUG", "Destination Location: (" + destLat + ", " + destLng + ")");
@@ -78,7 +77,6 @@ public class CordinatesFinderChurches {
         JsonObjectRequest distanceRequest = new JsonObjectRequest(Request.Method.GET, distanceUrl, null,
                 response -> {
                     try {
-                        // Log the raw API response for debugging
                         Log.d("DEBUG", "API Response: " + response.toString());
 
                         JSONArray rows = response.getJSONArray("rows");
@@ -90,16 +88,11 @@ public class CordinatesFinderChurches {
                                 double distanceInMeters = parseDistance(distanceText); // Convert it to meters
 
 
-                                // Log the parsed street distance for debugging
                                 Log.d("DEBUG", "Fetched distance: " + distanceText + " | Distance in meters: " + distanceValue);
 
-                                // Convert radius to meters if the radius is in kilometers
                                 int radiusInMeters = radius * 1000; // Convert radius from kilometers to meters
 
-                                // Log the comparison
-                                Log.d("DEBUG", "Comparing distance with radius: " + distanceValue + " vs. " + radiusInMeters);
 
-                                // Only include the church if its street distance is within the radius (in meters)
                                 if (distanceInMeters <= radiusInMeters) {
                                     coordinates.append("Church ").append(": ")
                                             .append(destLat).append(", ").append(destLng)
@@ -139,22 +132,17 @@ public class CordinatesFinderChurches {
         queue.add(distanceRequest);
     }
 
-    // Convert distance from text (e.g., "500 meters" or "0.5 km") to an integer value in meters
     private int parseDistanceToMeters(String distanceText) {
         int distance = 0;
 
         try {
-            // Log the raw distance text for debugging
-            Log.d("DEBUG", "Parsing distance text: " + distanceText);
-
-            // Check if the distanceText contains a number and the unit is meters or kilometers
+           
             if (distanceText.contains("m")) {
                 distance = Integer.parseInt(distanceText.replace(" m", "").replace(",", ""));
             } else if (distanceText.contains("km")) {
                 distance = (int) (Double.parseDouble(distanceText.replace(" km", "").replace(",", "")) * 1000);
             }
 
-            // Log the final parsed distance in meters
             Log.d("DEBUG", "Parsed distance (in meters): " + distance);
         } catch (Exception e) {
             Log.e("DistanceParseError", "Error parsing distance: " + distanceText);
@@ -164,7 +152,7 @@ public class CordinatesFinderChurches {
     }
     private double parseDistance(String distanceText) {
         try {
-            // Extract the numerical value from the distance text (e.g., "11.9 km")
+            // Extract the numerical value from the distance text
             String[] parts = distanceText.split(" ");
             double distanceInKm = Double.parseDouble(parts[0]); // Get the number (e.g., 11.9)
             return distanceInKm * 1000; // Convert km to meters
