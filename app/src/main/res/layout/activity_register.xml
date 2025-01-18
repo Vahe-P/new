@@ -6,7 +6,6 @@
     android:gravity="center_vertical"
     android:windowSoftInputMode="adjustResize">
 
-    <!-- Email EditText -->
 
 
     <EditText
@@ -19,7 +18,6 @@
         android:textColorHint="#888888"
         android:textSize="16sp"/>
 
-    <!-- Password EditText -->
     <EditText
         android:id="@+id/password_register"
         android:layout_width="match_parent"
@@ -30,7 +28,6 @@
         android:textColorHint="#888888"
         android:textSize="16sp"/>
 
-    <!-- Confirm Password EditText -->
     <EditText
         android:id="@+id/password_register_conf"
         android:layout_width="match_parent"
@@ -41,7 +38,6 @@
         android:textColorHint="#888888"
         android:textSize="16sp"/>
 
-    <!-- Register Button -->
     <Button
         android:id="@+id/btn_register"
         android:layout_width="match_parent"
@@ -49,7 +45,6 @@
         android:text="Register"
         android:layout_marginBottom="12dp"
         android:contentDescription="Login to your account" />
-    <!-- Redirect to Login Text -->
     <TextView
         android:id="@+id/login_redirect"
         android:layout_width="match_parent"
