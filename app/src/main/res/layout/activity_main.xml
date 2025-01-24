@@ -101,6 +101,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/recommendedText"
+        android:orientation="vertical"
         android:layout_above="@id/bottomButtons">
 
 
@@ -115,6 +116,18 @@
             android:padding="8dp"
             android:text="Coordinates will appear here"
             android:textColor="#000000" />
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp">
+
+            <LinearLayout
+                android:id="@+id/resultsContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </ScrollView>
+
     </LinearLayout>
 
     <LinearLayout

@@ -9,6 +9,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -59,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
         fromWhereSpinner = findViewById(R.id.numberSpinner);
         categorySpinner = findViewById(R.id.categorySpinner);
         recommendedText = findViewById(R.id.recommendedText);
+        LinearLayout resultsContainer = findViewById(R.id.resultsContainer);
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
@@ -84,23 +86,29 @@ public class MainActivity extends AppCompatActivity {
                 CordinatesFinderChurches cordinatesFinderChurches=new CordinatesFinderChurches();
                 CordinatesFinderMuseums cordinatesFinderMuseums=new CordinatesFinderMuseums();
                 CordinatesFinderArtGalleries cordinatesFinderArtGalleries=new CordinatesFinderArtGalleries();
+                CordinatesFinderParks cordinatesFinderParks=new CordinatesFinderParks();
                 if (fromWhere.equals("from my place")) {
                     switch (selectedCategory){
+
                         case "churches":
-                            cordinatesFinderChurches.getChurchCoordinates(userLatitude, userLongitude, radius,apiKey,resultView);
+                            cordinatesFinderChurches.getChurchCoordinates(userLatitude, userLongitude, radius,apiKey,resultView,resultsContainer);
                             break;
                         case "museums":
-                            cordinatesFinderMuseums.getMuseumCoordinates(userLatitude,userLongitude,radius,apiKey,resultView);
+                            cordinatesFinderMuseums.getMuseumCoordinates(userLatitude,userLongitude,radius,apiKey,resultView,resultsContainer);
                             break;
                         case "art galleries":
-                            //cordinatesFinderArtGalleries.fetchAllNearbyArtGalleries(userLatitude,userLongitude,radius,resultView,googleMap);
+                            cordinatesFinderArtGalleries.getArtGalleryCoordinates(userLatitude,userLongitude,radius,resultView,resultsContainer);
+                            break;
+                        case "parks":
+                            //cordinatesFinderParks.getParkCoordinatesAndDistance(userLatitude,userLongitude,radius,resultView);
+                            break;
 
                     }
 
                 } else {
                     double userLatitudeChoosen = 0;
                     double userLongitudeChoosen = 0;
-                    cordinatesFinderChurches.getChurchCoordinates(userLatitudeChoosen, userLongitudeChoosen, radius,apiKey,resultView);
+                    cordinatesFinderChurches.getChurchCoordinates(userLatitudeChoosen, userLongitudeChoosen, radius,apiKey,resultView,resultsContainer);
                 }
             } else {
 
