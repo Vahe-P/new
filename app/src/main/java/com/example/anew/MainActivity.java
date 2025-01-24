@@ -76,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
 
         searchButton.setOnClickListener(v -> {
             recommendedText.setText("Result");
+            searchBar.setEnabled(false);
             if (userLocation != null) {
                 String fromWhere = fromWhereSpinner.getSelectedItem().toString().toLowerCase();
                 double userLatitude = userLocation.getLatitude();
