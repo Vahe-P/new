@@ -2,6 +2,8 @@ package com.example.anew;
 
 import android.os.Handler;
 import android.os.Looper;
+import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.util.Log;
 
@@ -11,6 +13,7 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -21,7 +24,7 @@ public class CordinatesFinderChurches {
         new Handler(Looper.getMainLooper()).post(() -> resultView.setText("Searching for churches"));
     }
 
-    public void getChurchCoordinates(double userLat, double userLng, int radius, String apiKey, TextView resultView) {
+    public void getChurchCoordinates(double userLat, double userLng, int radius, String apiKey, TextView resultView, LinearLayout resultsContainer) {
         SearchText(resultView);
         String url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" +
                 userLat + "," + userLng +
@@ -46,7 +49,7 @@ public class CordinatesFinderChurches {
                                 double lng = location.getDouble("lng");
 
                                 // Fetch street distance for each church
-                                getStreetDistance(userLat, userLng, lat, lng, radius, apiKey, coordinates, i + 1, resultView, pendingRequests, results.length());
+                                getStreetDistance(userLat, userLng, lat, lng, radius, apiKey, coordinates, i + 1, resultView, pendingRequests, results.length(),results,resultsContainer);
                             }
                         } else {
                             updateResultView(resultView, "No churches found within the radius.");
@@ -62,7 +65,7 @@ public class CordinatesFinderChurches {
     }
 
     private void getStreetDistance(double userLat, double userLng, double destLat, double destLng, int radius, String apiKey,
-                                   StringBuilder coordinates, int index, TextView resultView, AtomicInteger pendingRequests, int totalRequests) {
+                                   StringBuilder coordinates, int index, TextView resultView, AtomicInteger pendingRequests, int totalRequests,JSONArray results, LinearLayout container) {
         String distanceUrl = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=" +
                 userLat + "," + userLng +
                 "&destinations=" + destLat + "," + destLng +
@@ -124,14 +127,16 @@ public class CordinatesFinderChurches {
 
                     // Check if all requests are completed
                     if (pendingRequests.decrementAndGet() == 0) {
-                        updateResultView(resultView, coordinates.toString());
+                        updateResultView(resultView, "Here We Go");
+                        createButtonsForChurches(results,container);
                     }
                 },
                 error -> {
                     Log.e("DistanceMatrixError", "Error fetching distance: " + error.getMessage());
                     coordinates.append("Error fetching distance for Church ").append(index).append("\n");
                     if (pendingRequests.decrementAndGet() == 0) {
-                        updateResultView(resultView, coordinates.toString());
+                        updateResultView(resultView, "Here We Go");
+                        createButtonsForChurches(results,container);
                     }
                 }
         );
@@ -176,6 +181,52 @@ public class CordinatesFinderChurches {
 
     private void updateResultView(TextView resultView, String text) {
         new Handler(Looper.getMainLooper()).post(() -> resultView.setText(text));
+    }
+    private void createButtonsForChurches(final JSONArray results, final LinearLayout container) {
+        try {
+            // Clear any existing views in the container only once
+            container.removeAllViews();
+
+            // Loop through the results from the API to create buttons
+            for (int i = 0; i < results.length(); i++) {
+                JSONObject place = results.getJSONObject(i);
+                String name = place.getString("name");
+
+                // Create a new Button for each museum
+                Button button = new Button(container.getContext());
+
+                // Set text for the button
+                button.setText(name);
+
+                // Set a default image (replace with an actual image resource if needed)
+                button.setCompoundDrawablesWithIntrinsicBounds(R.drawable.download, 0, 0, 0);
+
+                // Apply some styling (padding, margins)
+                button.setPadding(16, 16, 16, 16);
+                button.setTextSize(16);
+
+                // Set layout parameters to make sure buttons are added correctly
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                );
+                params.setMargins(0, 0, 0, 10);  // Add margin between buttons
+                button.setLayoutParams(params);
+
+                // Add the button to the container
+                container.addView(button);
+
+                // Log to confirm that the button is created
+                Log.d("DEBUG", "Created button for museum: " + name);
+            }
+
+            // Ensure the layout is refreshed and the buttons are shown
+            container.requestLayout();  // Request a layout pass
+            container.invalidate();     // Force a redraw
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
 }
