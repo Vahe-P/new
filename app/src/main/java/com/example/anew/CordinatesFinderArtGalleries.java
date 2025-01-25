@@ -20,8 +20,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 public class CordinatesFinderArtGalleries {
-    private static final String API_KEY = "AIzaSyDfylRP2UhEe-kcDiigAiECbCqL1HAJ3I4"; // Ensure you have a valid API key
-
+    private static final String API_KEY = "AIzaSyDfylRP2UhEe-kcDiigAiECbCqL1HAJ3I4"; 
     public void getArtGalleryCoordinates(double latitude, double longitude, int radiusInKm, TextView coordinatesView, LinearLayout resultsContainer) {
         if (coordinatesView == null || resultsContainer == null) {
             Log.e("Error", "TextView or LinearLayout is null");
@@ -106,15 +105,12 @@ public class CordinatesFinderArtGalleries {
 
     private void createButtonsForGalleries(final JSONArray results, final LinearLayout container, final TextView coordinatesView) {
         try {
-            // Clear any existing views first
             container.removeAllViews();
 
             if (results == null || results.length() == 0) {
                 Log.e("ERROR", "No valid results available to create buttons");
                 return;
             }
-
-            // Loop through results and create a button for each gallery
             for (int i = 0; i < results.length(); i++) {
                 try {
                     JSONObject place = results.getJSONObject(i);
@@ -134,8 +130,7 @@ public class CordinatesFinderArtGalleries {
                     );
                     params.setMargins(0, 0, 0, 10); // Add margin between buttons
                     button.setLayoutParams(params);
-
-                    // Add button to container on the UI thread
+                    
                     container.post(() -> container.addView(button));
 
                     Log.d("DEBUG", "Button created for: " + name);
@@ -145,10 +140,8 @@ public class CordinatesFinderArtGalleries {
                 }
             }
 
-            // Set "Here We Go" text on coordinatesView after all buttons are added
             coordinatesView.post(() -> coordinatesView.setText("Here We Go"));
 
-            // Request layout refresh and invalidate the container to ensure UI updates
             container.requestLayout();
             container.invalidate();
 
