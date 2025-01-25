@@ -32,7 +32,7 @@ public class CordinatesFinderMuseums {
         container.removeAllViews();
         String url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" +
                 userLat + "," + userLng +
-                "&radius=" + radius * 1000 + // radius in meters
+                "&radius=" + radius * 1000 + 
                 "&type=museum" +
                 "&key=" + apiKey;
 
@@ -46,7 +46,6 @@ public class CordinatesFinderMuseums {
                             StringBuilder coordinates = new StringBuilder();
                             AtomicInteger pendingRequests = new AtomicInteger(results.length());
 
-                            // Call the function to create TextViews for all coordinates
 
 
                             for (int i = 0; i < results.length(); i++) {
@@ -56,12 +55,9 @@ public class CordinatesFinderMuseums {
                                 double lat = location.getDouble("lat");
                                 double lng = location.getDouble("lng");
 
-                                // Filter by name containing "museum"
                                 if (placeName.toLowerCase().contains("museum")) {
-                                    // Fetch street distance for each museum
                                     getStreetDistance(userLat, userLng, lat, lng, radius, apiKey, coordinates, placeName, resultView, pendingRequests, results.length(),results,container);
                                 } else {
-                                    // If it doesn't match, decrement pending requests count
                                     if (pendingRequests.decrementAndGet() == 0) {
                                         createButtonsForMuseums(results, container);
                                         updateResultView(resultView, "Here We Go");
@@ -156,45 +152,35 @@ public class CordinatesFinderMuseums {
 
     private void createButtonsForMuseums(final JSONArray results, final LinearLayout container) {
         try {
-            // Clear any existing views in the container only once
             container.removeAllViews();
 
-            // Loop through the results from the API to create buttons
             for (int i = 0; i < results.length(); i++) {
                 JSONObject place = results.getJSONObject(i);
                 String name = place.getString("name");
 
-                // Create a new Button for each museum
                 Button button = new Button(container.getContext());
 
-                // Set text for the button
                 button.setText(name);
 
-                // Set a default image (replace with an actual image resource if needed)
                 button.setCompoundDrawablesWithIntrinsicBounds(R.drawable.download, 0, 0, 0);
 
-                // Apply some styling (padding, margins)
                 button.setPadding(16, 16, 16, 16);
                 button.setTextSize(16);
 
-                // Set layout parameters to make sure buttons are added correctly
                 LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
                 );
-                params.setMargins(0, 0, 0, 10);  // Add margin between buttons
+                params.setMargins(0, 0, 0, 10);  
                 button.setLayoutParams(params);
 
-                // Add the button to the container
                 container.addView(button);
 
-                // Log to confirm that the button is created
                 Log.d("DEBUG", "Created button for museum: " + name);
             }
 
-            // Ensure the layout is refreshed and the buttons are shown
-            container.requestLayout();  // Request a layout pass
-            container.invalidate();     // Force a redraw
+            container.requestLayout();  
+            container.invalidate();     
 
         } catch (JSONException e) {
             e.printStackTrace();
