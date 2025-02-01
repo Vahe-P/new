@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 public class CordinatesFinderArtGalleries {
-    private static final String API_KEY = "AIzaSyDfylRP2UhEe-kcDiigAiECbCqL1HAJ3I4"; 
+    private static final String API_KEY = ""; 
     public void getArtGalleryCoordinates(double latitude, double longitude, int radiusInKm, TextView coordinatesView, LinearLayout resultsContainer) {
         if (coordinatesView == null || resultsContainer == null) {
             Log.e("Error", "TextView or LinearLayout is null");
