@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText searchBar;
     private Button searchButton;
     private Location userLocation;
-    String apiKey = "AIzaSyDfylRP2UhEe-kcDiigAiECbCqL1HAJ3I4";
+    String apiKey = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
