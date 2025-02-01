@@ -1,8 +1,10 @@
 package com.example.anew;
 
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Handler;
 import android.os.Looper;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.util.Log;
@@ -21,6 +23,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import android.graphics.drawable.Drawable;
+import android.widget.ImageButton;
+import com.android.volley.toolbox.ImageRequest;
+
+// Package and imports remain unchanged
 
 public class CordinatesFinderMuseums {
     private void setSearchText(TextView resultView) {
@@ -46,25 +54,19 @@ public class CordinatesFinderMuseums {
                             StringBuilder coordinates = new StringBuilder();
                             AtomicInteger pendingRequests = new AtomicInteger(results.length());
 
-                            // Call the function to create TextViews for all coordinates
-
-
                             for (int i = 0; i < results.length(); i++) {
                                 JSONObject place = results.getJSONObject(i);
-                                String placeName = place.getString("name");
+                                String placeName = place.getString("name").toLowerCase(); // Case-insensitive matching
                                 JSONObject location = place.getJSONObject("geometry").getJSONObject("location");
                                 double lat = location.getDouble("lat");
                                 double lng = location.getDouble("lng");
 
-                                // Filter by name containing "museum"
-                                if (placeName.toLowerCase().contains("museum")) {
-                                    // Fetch street distance for each museum
-                                    getStreetDistance(userLat, userLng, lat, lng, radius, apiKey, coordinates, placeName, resultView, pendingRequests, results.length(),results,container);
+                                // Filter by name containing "museum" and exclude "studio"
+                                if (placeName.contains("museum") && !placeName.contains("studio")) {
+                                    getStreetDistance(userLat, userLng, lat, lng, radius, apiKey, coordinates, place, resultView, pendingRequests, container);
                                 } else {
-                                    // If it doesn't match, decrement pending requests count
                                     if (pendingRequests.decrementAndGet() == 0) {
-                                        createButtonsForMuseums(results, container);
-                                        updateResultView(resultView, "Here We Go");
+                                        updateResultView(resultView, "Filtered results ready.");
                                     }
                                 }
                             }
@@ -82,7 +84,7 @@ public class CordinatesFinderMuseums {
     }
 
     private void getStreetDistance(double userLat, double userLng, double destLat, double destLng, int radius, String apiKey,
-                                   StringBuilder coordinates, String placeName, TextView resultView, AtomicInteger pendingRequests, int totalRequests,JSONArray results, LinearLayout container) {
+                                   StringBuilder coordinates, JSONObject place, TextView resultView, AtomicInteger pendingRequests, LinearLayout container) {
         String distanceUrl = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=" +
                 userLat + "," + userLng +
                 "&destinations=" + destLat + "," + destLng +
@@ -100,38 +102,29 @@ public class CordinatesFinderMuseums {
                                 String distanceText = elements.getJSONObject("distance").getString("text");
                                 double distanceInMeters = parseDistance(distanceText);
 
-                                // Only include the museum if its street distance is within the radius (in meters)
-                                if (distanceInMeters <= radius * 1000) { // Radius converted to meters
-                                    coordinates.append(placeName).append(": ")
+                                // Include only if within the radius
+                                if (distanceInMeters <= radius * 1000) {
+                                    coordinates.append(place.getString("name")).append(": ")
                                             .append(destLat).append(", ").append(destLng)
                                             .append(" (").append(distanceText).append(" via street)\n");
+
+                                    // Add the place to the UI, including the distance
+                                    addPlaceToContainer(place, distanceText, container, apiKey);
                                 }
-                            } else {
-                                coordinates.append(placeName).append(": ")
-                                        .append(destLat).append(", ").append(destLng)
-                                        .append(" (Distance unavailable)\n");
                             }
-                        } else {
-                            coordinates.append(placeName).append(": ")
-                                    .append(destLat).append(", ").append(destLng)
-                                    .append(" (Distance unavailable)\n");
                         }
                     } catch (Exception e) {
                         Log.e("DistanceMatrixError", "Error parsing distance response: " + e.getMessage());
-                        coordinates.append("Error fetching distance for ").append(placeName).append("\n");
                     }
 
                     if (pendingRequests.decrementAndGet() == 0) {
-                        updateResultView(resultView, "Here We Go");
-                        createButtonsForMuseums(results, container);
+                        updateResultView(resultView, "Filtered results ready.");
                     }
                 },
                 error -> {
                     Log.e("DistanceMatrixError", "Error fetching distance: " + error.getMessage());
-                    coordinates.append("Error fetching distance for ").append(placeName).append("\n");
                     if (pendingRequests.decrementAndGet() == 0) {
-                        updateResultView(resultView, "Here We Go");
-                        createButtonsForMuseums(results, container);
+                        updateResultView(resultView, "Filtered results ready.");
                     }
                 }
         );
@@ -154,50 +147,76 @@ public class CordinatesFinderMuseums {
         new Handler(Looper.getMainLooper()).post(() -> resultView.setText(text));
     }
 
-    private void createButtonsForMuseums(final JSONArray results, final LinearLayout container) {
+    private void addPlaceToContainer(JSONObject place, String distanceText, LinearLayout container, String apiKey) {
         try {
-            // Clear any existing views in the container only once
-            container.removeAllViews();
+            String name = place.getString("name");
+            String photoUrl = getPhotoUrl(place, apiKey);
 
-            // Loop through the results from the API to create buttons
-            for (int i = 0; i < results.length(); i++) {
-                JSONObject place = results.getJSONObject(i);
-                String name = place.getString("name");
+            // Create a horizontal LinearLayout to act as a button
+            LinearLayout buttonLayout = new LinearLayout(container.getContext());
+            buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
+            buttonLayout.setBackgroundResource(android.R.drawable.btn_default); // Make it look like a button
+            buttonLayout.setPadding(16, 16, 16, 16);
+            buttonLayout.setClickable(true);
+            buttonLayout.setFocusable(true);
 
-                // Create a new Button for each museum
-                Button button = new Button(container.getContext());
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            layoutParams.setMargins(0, 0, 0, 10);
+            buttonLayout.setLayoutParams(layoutParams);
 
-                // Set text for the button
-                button.setText(name);
+            // Create ImageView for the museum image
+            ImageView imageView = new ImageView(container.getContext());
+            int imageSize = 150; // Set image size
+            LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(imageSize, imageSize);
+            imageParams.setMargins(0, 0, 16, 0);
+            imageView.setLayoutParams(imageParams);
+            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            imageView.setImageResource(R.drawable.download); // Default image
 
-                // Set a default image (replace with an actual image resource if needed)
-                button.setCompoundDrawablesWithIntrinsicBounds(R.drawable.download, 0, 0, 0);
-
-                // Apply some styling (padding, margins)
-                button.setPadding(16, 16, 16, 16);
-                button.setTextSize(16);
-
-                // Set layout parameters to make sure buttons are added correctly
-                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                );
-                params.setMargins(0, 0, 0, 10);  // Add margin between buttons
-                button.setLayoutParams(params);
-
-                // Add the button to the container
-                container.addView(button);
-
-                // Log to confirm that the button is created
-                Log.d("DEBUG", "Created button for museum: " + name);
+            // Load the actual image dynamically
+            if (photoUrl != null) {
+                RequestQueue queue = Volley.newRequestQueue(container.getContext());
+                ImageRequest imageRequest = new ImageRequest(photoUrl,
+                        response -> imageView.setImageDrawable(new BitmapDrawable(container.getResources(), response)),
+                        0, 0, null, null,
+                        error -> Log.e("ImageLoadError", "Error loading image: " + error.getMessage()));
+                queue.add(imageRequest);
             }
 
-            // Ensure the layout is refreshed and the buttons are shown
-            container.requestLayout();  // Request a layout pass
-            container.invalidate();     // Force a redraw
+            // Create TextView for the museum name and distance
+            TextView textView = new TextView(container.getContext());
+            textView.setText(name + " - Distance: " + distanceText);
+            textView.setTextSize(16);
+            textView.setTextColor(container.getContext().getResources().getColor(android.R.color.black));
+
+            // Add ImageView and TextView to the button layout
+            buttonLayout.addView(imageView);
+            buttonLayout.addView(textView);
+
+            // Set click event (optional)
+            buttonLayout.setOnClickListener(v -> Toast.makeText(container.getContext(), "Clicked: " + name, Toast.LENGTH_SHORT).show());
+
+            // Add the layout to the container
+            container.addView(buttonLayout);
 
         } catch (JSONException e) {
-            e.printStackTrace();
+            Log.e("DEBUG", "Error adding place to container: " + e.getMessage());
         }
+    }
+
+    private String getPhotoUrl(JSONObject place, String apiKey) {
+        try {
+            JSONArray photos = place.optJSONArray("photos");
+            if (photos != null && photos.length() > 0) {
+                String photoReference = photos.getJSONObject(0).getString("photo_reference");
+                return "https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=" + photoReference + "&key=" + apiKey;
+            }
+        } catch (JSONException e) {
+            Log.e("DEBUG", "Error extracting photo reference: " + e.getMessage());
+        }
+        return null; // No photo available
     }
 }

@@ -76,43 +76,55 @@ public class MainActivity extends AppCompatActivity {
 
         searchButton.setOnClickListener(v -> {
             recommendedText.setText("Result");
-            if (userLocation != null) {
-                String fromWhere = fromWhereSpinner.getSelectedItem().toString().toLowerCase();
-                double userLatitude = userLocation.getLatitude();
-                double userLongitude = userLocation.getLongitude();
-                int radius = searchBar.getText().toString().isEmpty() ? 5 : Integer.parseInt(searchBar.getText().toString());
-                String selectedCategory = categorySpinner.getSelectedItem().toString().toLowerCase();
+            searchBar.setEnabled(false);
+            searchBar.setEnabled(true);
+            int radius = searchBar.getText().toString().isEmpty() ? 5 : Integer.parseInt(searchBar.getText().toString());
+            if(radius>100){
+                resultView.setText("The radius shouldn't be more than 100km");
 
-                CordinatesFinderChurches cordinatesFinderChurches=new CordinatesFinderChurches();
-                CordinatesFinderMuseums cordinatesFinderMuseums=new CordinatesFinderMuseums();
-                CordinatesFinderArtGalleries cordinatesFinderArtGalleries=new CordinatesFinderArtGalleries();
-                CordinatesFinderParks cordinatesFinderParks=new CordinatesFinderParks();
-                if (fromWhere.equals("from my place")) {
-                    switch (selectedCategory){
+            }else{
+                if (userLocation != null) {
+                    String fromWhere = fromWhereSpinner.getSelectedItem().toString().toLowerCase();
+                    double userLatitude = userLocation.getLatitude();
+                    double userLongitude = userLocation.getLongitude();
+                    String selectedCategory = categorySpinner.getSelectedItem().toString().toLowerCase();
 
-                        case "churches":
-                            cordinatesFinderChurches.getChurchCoordinates(userLatitude, userLongitude, radius,apiKey,resultView,resultsContainer);
-                            break;
-                        case "museums":
-                            cordinatesFinderMuseums.getMuseumCoordinates(userLatitude,userLongitude,radius,apiKey,resultView,resultsContainer);
-                            break;
-                        case "art galleries":
-                            cordinatesFinderArtGalleries.getArtGalleryCoordinates(userLatitude,userLongitude,radius,resultView,resultsContainer);
-                            break;
-                        case "parks":
-                            //cordinatesFinderParks.getParkCoordinatesAndDistance(userLatitude,userLongitude,radius,resultView);
-                            break;
+                    CordinatesFinderChurches cordinatesFinderChurches = new CordinatesFinderChurches();
+                    CordinatesFinderMuseums cordinatesFinderMuseums = new CordinatesFinderMuseums();
+                    CordinatesFinderArtGalleries cordinatesFinderArtGalleries = new CordinatesFinderArtGalleries();
+                    CordinatesFinderParks cordinatesFinderParks = new CordinatesFinderParks();
+                    if (fromWhere.equals("from my place")) {
+                        switch (selectedCategory) {
 
+                            case "churches":
+                                cordinatesFinderChurches.getChurchCoordinates(userLatitude, userLongitude, radius, apiKey, resultView, resultsContainer);
+                                break;
+                            case "museums":
+                                cordinatesFinderMuseums.getMuseumCoordinates(userLatitude, userLongitude, radius, apiKey, resultView, resultsContainer);
+                                break;
+                            case "art galleries":
+                                cordinatesFinderArtGalleries.getArtGalleryCoordinates(userLatitude, userLongitude, radius, apiKey,resultView, resultsContainer);
+                                break;
+                            case "parks":
+                                cordinatesFinderParks.getParkCoordinates(userLatitude, userLongitude, radius, apiKey,resultView, resultsContainer);
+                                break;
+
+                        }
+
+                    } else {
+
+                        Intent MapIntent = new Intent(MainActivity.this, Map.class);
+                        startActivityForResult(MapIntent, 1001);
+
+                        double userLatitudeChoosen =0;
+                        double userLongitudeChoosen = 0;
+                        cordinatesFinderChurches.getChurchCoordinates(userLatitudeChoosen, userLongitudeChoosen, radius, apiKey, resultView, resultsContainer);
                     }
 
                 } else {
-                    double userLatitudeChoosen = 0;
-                    double userLongitudeChoosen = 0;
-                    cordinatesFinderChurches.getChurchCoordinates(userLatitudeChoosen, userLongitudeChoosen, radius,apiKey,resultView,resultsContainer);
-                }
-            } else {
 
                 Toast.makeText(MainActivity.this, "Location not available. Please try again.", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -150,4 +162,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+
+
 }
