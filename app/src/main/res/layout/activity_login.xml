@@ -29,13 +29,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Login"
-        android:layout_marginBottom="12dp" />
+        android:layout_marginBottom="12dp"
+        android:backgroundTint="@color/login_button"/>
     <Button
         android:id="@+id/guest_mode_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Guest Mode"
-        android:layout_marginBottom="12dp" />
+        android:layout_marginBottom="12dp"
+        android:backgroundTint="@color/login_button"/>
 
 
     <TextView
@@ -44,7 +46,7 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:text="Don't have an account? Sign Up"
-        android:textColor="#0000FF"
+        android:textColor="#3262a8"
         android:layout_marginBottom="12dp"
         android:clickable="true"
         android:focusable="true" />
@@ -56,7 +58,7 @@
         android:text="Forgot your password?"
         android:gravity="center"
         android:layout_gravity="center_horizontal"
-        android:textColor="#0000FF"
+        android:textColor="#3262a8"
         android:clickable="true"
         android:focusable="true"/>
 

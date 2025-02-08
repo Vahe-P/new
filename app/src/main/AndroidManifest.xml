@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.example.anew">
+
     <!-- Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -17,10 +18,16 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.New"
         tools:targetApi="31">
+
+
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="YOUR_API_KEY" />
+
         <activity
             android:name=".Map"
-            android:exported="false" />
-        <!-- Main Activity -->
+            android:exported="true" /> <!-- Main Activity -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -39,12 +46,6 @@
         <activity
             android:name=".RegisterActivity"
             android:exported="true" />
-
-
-
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyDfylRP2UhEe-kcDiigAiECbCqL1HAJ3I4" />
     </application>
 
 </manifest>

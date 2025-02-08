@@ -12,6 +12,7 @@
         <item>MUSEUMS</item>
         <item>PARKS</item>
         <item>ART GALLERIES</item>
-        <item>CAMPGROUNDS</item>
+        <item>LIBRARY</item>
+        <item>MOVIE THEATER</item>
     </string-array>
 </resources>

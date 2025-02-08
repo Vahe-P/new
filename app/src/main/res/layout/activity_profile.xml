@@ -35,7 +35,8 @@
         android:layout_height="wrap_content"
         android:text="Log Out"
         android:layout_marginTop="80dp"
-        tools:ignore="NotSibling" />
+        tools:ignore="NotSibling"
+        android:backgroundTint="@color/login_button"/>
 
     <!-- Bottom Navigation Buttons -->
     <LinearLayout

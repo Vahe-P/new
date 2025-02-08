@@ -81,8 +81,8 @@
         android:layout_below="@id/choosingBars"
         android:layout_margin="16dp"
         android:text="Search"
-        android:background="#4CAF50"
-        android:textColor="#FFFFFF" />
+        android:backgroundTint="@color/login_button"
+        />
 
     <TextView
         android:id="@+id/recommendedText"
@@ -103,6 +103,7 @@
         android:layout_below="@id/recommendedText"
         android:orientation="vertical"
         android:layout_above="@id/bottomButtons">
+
 
 
 

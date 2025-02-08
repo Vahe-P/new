@@ -1,15 +1,17 @@
 package com.example.anew;
 
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Handler;
 import android.os.Looper;
-import android.widget.Button;
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.util.Log;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.ImageRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 
@@ -17,28 +19,22 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import android.graphics.drawable.BitmapDrawable;
-import android.widget.Toast;
-import com.android.volley.toolbox.ImageRequest;
 
-public class CordinatesFinderArtGalleries {
-    private Set<String> addedArtGalleries = new HashSet<>();
 
-    private void SearchText(TextView resultView) {
-        new Handler(Looper.getMainLooper()).post(() -> resultView.setText("Searching for art galleries"));
+public class CoordinatesFinderLibraries {
+    private void setSearchText(TextView resultView) {
+        new Handler(Looper.getMainLooper()).post(() -> resultView.setText("Searching for libraries..."));
     }
 
-    public void getArtGalleryCoordinates(double userLat, double userLng, int radius, String apiKey, TextView resultView, LinearLayout resultsContainer) {
-        SearchText(resultView);
-        resultsContainer.removeAllViews();
+    public void getLibraryCoordinates(double userLat, double userLng, int radius, String apiKey, TextView resultView, LinearLayout container) {
+        setSearchText(resultView);
+        container.removeAllViews();
         String url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" +
                 userLat + "," + userLng +
                 "&radius=" + radius * 1000 + // radius in meters
-                "&keyword=art gallery" +
+                "&type=library" +
                 "&key=" + apiKey;
 
         RequestQueue queue = Volley.newRequestQueue(resultView.getContext());
@@ -53,15 +49,20 @@ public class CordinatesFinderArtGalleries {
 
                             for (int i = 0; i < results.length(); i++) {
                                 JSONObject place = results.getJSONObject(i);
+                                String placeName = place.getString("name").toLowerCase(); // Case-insensitive matching
                                 JSONObject location = place.getJSONObject("geometry").getJSONObject("location");
                                 double lat = location.getDouble("lat");
                                 double lng = location.getDouble("lng");
 
-                                // Fetch street distance for each gallery
-                                getStreetDistance(userLat, userLng, lat, lng, radius, apiKey, coordinates, place, resultView, pendingRequests, results, resultsContainer);
+                                // Filter by name containing "museum" and exclude "studio"
+
+                                if (pendingRequests.decrementAndGet() == 0) {
+                                    updateResultView(resultView, "Filtered results ready4."+String.valueOf(results.length()));
+                                }
+
                             }
                         } else {
-                            updateResultView(resultView, "No art galleries found within the radius.");
+                            updateResultView(resultView, "No museums found within the radius.");
                         }
                     } catch (Exception e) {
                         updateResultView(resultView, "Error parsing the response.");
@@ -74,7 +75,7 @@ public class CordinatesFinderArtGalleries {
     }
 
     private void getStreetDistance(double userLat, double userLng, double destLat, double destLng, int radius, String apiKey,
-                                   StringBuilder coordinates, JSONObject place, TextView resultView, AtomicInteger pendingRequests, JSONArray results, LinearLayout container) {
+                                   StringBuilder coordinates, JSONObject place, TextView resultView, AtomicInteger pendingRequests, LinearLayout container) {
         String distanceUrl = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=" +
                 userLat + "," + userLng +
                 "&destinations=" + destLat + "," + destLng +
@@ -93,19 +94,13 @@ public class CordinatesFinderArtGalleries {
                                 double distanceInMeters = parseDistance(distanceText);
 
                                 // Include only if within the radius
-                                if (distanceInMeters <= radius * 1000 && !shouldExclude(place.getString("name"))) {
-                                    // Avoid duplicate galleries by checking if we already added this one
-                                    String galleryId = place.getString("place_id");
-                                    if (!isArtGalleryAlreadyAdded(galleryId)) {
-                                        // Update the StringBuilder with the gallery name and distance
-                                        coordinates.append(place.getString("name")).append(": ")
-                                                .append(destLat).append(", ").append(destLng)
-                                                .append(" (").append(distanceText).append(" via street)\n");
+                                if (distanceInMeters <= radius * 1000 ) {
+                                    coordinates.append(place.getString("name")).append(": ")
+                                            .append(destLat).append(", ").append(destLng)
+                                            .append(" (").append(distanceText).append(" via street)\n");
 
-                                        // Add the place to the UI
-                                        addPlaceToContainer(place, container, apiKey, distanceText);
-                                        markArtGalleryAsAdded(galleryId); // Mark as added
-                                    }
+                                    // Add the place to the UI, including the distance
+                                    addPlaceToContainer(place, distanceText, container, apiKey);
                                 }
                             }
                         }
@@ -114,13 +109,13 @@ public class CordinatesFinderArtGalleries {
                     }
 
                     if (pendingRequests.decrementAndGet() == 0) {
-                        updateResultView(resultView, "Filtered Results:");
+                        updateResultView(resultView, "Filtered results ready3.");
                     }
                 },
                 error -> {
                     Log.e("DistanceMatrixError", "Error fetching distance: " + error.getMessage());
                     if (pendingRequests.decrementAndGet() == 0) {
-                        updateResultView(resultView, "Filtered Results:");
+                        updateResultView(resultView, "Filtered results ready2.");
                     }
                 }
         );
@@ -128,23 +123,30 @@ public class CordinatesFinderArtGalleries {
         queue.add(distanceRequest);
     }
 
-    private boolean isArtGalleryAlreadyAdded(String galleryId) {
-        return addedArtGalleries.contains(galleryId);
+    private double parseDistance(String distanceText) {
+        try {
+            String[] parts = distanceText.split(" ");
+            double distanceInKm = Double.parseDouble(parts[0]);
+            return distanceInKm * 1000;
+        } catch (NumberFormatException e) {
+            Log.e("DEBUG", "Error parsing distance: " + distanceText, e);
+            return 0;
+        }
     }
 
-    private void markArtGalleryAsAdded(String galleryId) {
-        addedArtGalleries.add(galleryId);
+    private void updateResultView(TextView resultView, String text) {
+        new Handler(Looper.getMainLooper()).post(() -> resultView.setText(text));
     }
 
-    private void addPlaceToContainer(JSONObject place, LinearLayout container, String apiKey, String distanceText) {
+    private void addPlaceToContainer(JSONObject place, String distanceText, LinearLayout container, String apiKey) {
         try {
             String name = place.getString("name");
             String photoUrl = getPhotoUrl(place, apiKey);
 
-            // Create a new LinearLayout to act as a "button"
+            // Create a horizontal LinearLayout to act as a button
             LinearLayout buttonLayout = new LinearLayout(container.getContext());
             buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
-            buttonLayout.setBackgroundResource(android.R.drawable.btn_default);
+            buttonLayout.setBackgroundResource(android.R.drawable.btn_default); // Make it look like a button
             buttonLayout.setPadding(16, 16, 16, 16);
             buttonLayout.setClickable(true);
             buttonLayout.setFocusable(true);
@@ -156,9 +158,9 @@ public class CordinatesFinderArtGalleries {
             layoutParams.setMargins(0, 0, 0, 10);
             buttonLayout.setLayoutParams(layoutParams);
 
-            // Create ImageView for the gallery image
+            // Create ImageView for the museum image
             ImageView imageView = new ImageView(container.getContext());
-            int imageSize = 150;
+            int imageSize = 150; // Set image size
             LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(imageSize, imageSize);
             imageParams.setMargins(0, 0, 16, 0);
             imageView.setLayoutParams(imageParams);
@@ -175,9 +177,9 @@ public class CordinatesFinderArtGalleries {
                 queue.add(imageRequest);
             }
 
-            // Create TextView for the gallery name and distance
+            // Create TextView for the museum name and distance
             TextView textView = new TextView(container.getContext());
-            textView.setText(name + " (" + distanceText + ")");
+            textView.setText(name + " - Distance: " + distanceText);
             textView.setTextSize(16);
             textView.setTextColor(container.getContext().getResources().getColor(android.R.color.black));
 
@@ -185,7 +187,7 @@ public class CordinatesFinderArtGalleries {
             buttonLayout.addView(imageView);
             buttonLayout.addView(textView);
 
-            // Set click event
+            // Set click event (optional)
             buttonLayout.setOnClickListener(v -> Toast.makeText(container.getContext(), "Clicked: " + name, Toast.LENGTH_SHORT).show());
 
             // Add the layout to the container
@@ -208,23 +210,8 @@ public class CordinatesFinderArtGalleries {
         }
         return null; // No photo available
     }
-
-    private double parseDistance(String distanceText) {
-        try {
-            String[] parts = distanceText.split(" ");
-            double distanceInKm = Double.parseDouble(parts[0]);
-            return distanceInKm * 1000;
-        } catch (NumberFormatException e) {
-            Log.e("DEBUG", "Error parsing distance: " + distanceText, e);
-            return 0;
-        }
-    }
-
-    private void updateResultView(TextView resultView, String text) {
-        new Handler(Looper.getMainLooper()).post(() -> resultView.setText(text));
-    }
     private static final String[] excludedWords = {
-            "Hotel", "Studio"
+            "Hotel"
     };
 
 
@@ -237,4 +224,5 @@ public class CordinatesFinderArtGalleries {
         }
         return false;
     }
+
 }

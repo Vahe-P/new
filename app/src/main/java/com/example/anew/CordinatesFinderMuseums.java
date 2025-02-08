@@ -103,7 +103,7 @@ public class CordinatesFinderMuseums {
                                 double distanceInMeters = parseDistance(distanceText);
 
                                 // Include only if within the radius
-                                if (distanceInMeters <= radius * 1000) {
+                                if (distanceInMeters <= radius * 1000 && !shouldExclude(place.getString("name"))) {
                                     coordinates.append(place.getString("name")).append(": ")
                                             .append(destLat).append(", ").append(destLng)
                                             .append(" (").append(distanceText).append(" via street)\n");
@@ -219,4 +219,19 @@ public class CordinatesFinderMuseums {
         }
         return null; // No photo available
     }
+    private static final String[] excludedWords = {
+            "Hotel"
+    };
+
+
+    private boolean shouldExclude(String placeName) {
+        // Check if the place name contains any of the excluded words
+        for (String word : excludedWords) {
+            if (placeName.toLowerCase().contains(word.toLowerCase())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }
