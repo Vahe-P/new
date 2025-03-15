@@ -43,10 +43,16 @@
         <activity
             android:name=".RegisterActivity"
             android:exported="true" />
+
+        <activity
+            android:name=".Map"
+            android:exported="true" />
+        <activity
+            android:name=".MapActivity"
+            android:exported="true" />
+
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="" />
-
-
+            android:value="AIzaSyDfylRP2UhEe-kcDiigAiECbCqL1HAJ3I4" />
     </application>
 </manifest>

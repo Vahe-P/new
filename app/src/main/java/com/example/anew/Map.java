@@ -20,6 +20,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 public class Map extends AppCompatActivity implements OnMapReadyCallback {
@@ -27,6 +28,7 @@ public class Map extends AppCompatActivity implements OnMapReadyCallback {
     private GoogleMap mMap;
     private LatLng selectedLocation;
     private FusedLocationProviderClient fusedLocationClient;
+    private Marker selectedMarker;
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
 
@@ -71,9 +73,14 @@ public class Map extends AppCompatActivity implements OnMapReadyCallback {
         }
 
         mMap.setOnMapClickListener(latLng -> {
-            mMap.clear();
-            mMap.addMarker(new MarkerOptions().position(latLng).title("Selected Location"));
+            if (selectedMarker != null) {
+                selectedMarker.remove();
+            }
+
+            selectedMarker = mMap.addMarker(new MarkerOptions().position(latLng).title("Selected Location"));
             selectedLocation = latLng;
+
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
         });
     }
 

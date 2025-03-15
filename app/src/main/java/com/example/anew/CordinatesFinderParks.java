@@ -17,31 +17,23 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.security.PrivateKey;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import android.graphics.drawable.BitmapDrawable;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
+
 import com.android.volley.toolbox.ImageRequest;
 
-public class CordinatesFinderParks {
-    private Set<String> addedParks = new HashSet<>();
-
-    // List of words to filter out
-    private static final String[] EXCLUDED_WORDS = {
-            "Hotel", "Restaurant", "Մատուռ", "Եկեղեցի", "Resort", "gyol",
-            "Hangsti", "goti", "Сар", "Xachasar"
-    };
-
+public class CordinatesFinderParks{
+    public boolean findedForParks=false;
     private void SearchText(TextView resultView) {
-        new Handler(Looper.getMainLooper()).post(() -> resultView.setText("Searching for parks"));
+        new Handler(Looper.getMainLooper()).post(() -> resultView.setText("Searching for parks..."));
     }
 
     public void getParkCoordinates(double userLat, double userLng, int radius, String apiKey, TextView resultView, LinearLayout resultsContainer) {
         SearchText(resultView);
-        resultsContainer.removeAllViews();
         String url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" +
                 userLat + "," + userLng +
                 "&radius=" + radius * 1000 + // radius in meters
@@ -64,7 +56,7 @@ public class CordinatesFinderParks {
                                 double lat = location.getDouble("lat");
                                 double lng = location.getDouble("lng");
 
-                                // Fetch street distance for each park
+                                // Fetch street distance for each church
                                 getStreetDistance(userLat, userLng, lat, lng, radius, apiKey, coordinates, place, resultView, pendingRequests, results, resultsContainer);
                             }
                         } else {
@@ -96,110 +88,93 @@ public class CordinatesFinderParks {
                         if (rows.length() > 0) {
                             JSONObject elements = rows.getJSONObject(0).getJSONArray("elements").getJSONObject(0);
                             if (elements.getString("status").equals("OK")) {
-                                String distanceText = elements.getJSONObject("distance").getString("text");
-                                double distanceInMeters = parseDistance(distanceText);
+                                String distanceText = elements.getJSONObject("distance").getString("text"); // E.g., "2.5 km"
+                                coordinates.append(place.getString("name")).append(": ")
+                                        .append(destLat).append(", ").append(destLng)
+                                        .append(" (").append(distanceText).append(" via street)\n");
 
-                                // Include only if within the radius and name doesn't contain excluded words
-                                if (distanceInMeters <= radius * 1000 && !shouldExclude(place.getString("name"))) {
-                                    // Avoid duplicate parks by checking if we already added this one
-                                    String parkId = place.getString("place_id");
-                                    if (!isParkAlreadyAdded(parkId)) {
-                                        // Update the StringBuilder with the park name and distance
-                                        coordinates.append(place.getString("name")).append(": ")
-                                                .append(destLat).append(", ").append(destLng)
-                                                .append(" (").append(distanceText).append(" via street)\n");
-
-                                        // Add the place to the UI
-                                        addPlaceToContainer(place, container, apiKey, distanceText);
-                                        markParkAsAdded(parkId); // Mark as added
-                                    }
-                                }
+                                addPlaceToContainer(place, container, apiKey, distanceText, radius);
+                            } else {
+                                coordinates.append("Distance unavailable for: ").append(place.getString("name")).append("\n");
                             }
                         }
-                    } catch (Exception e) {
+                    } catch (JSONException e) {
                         Log.e("DistanceMatrixError", "Error parsing distance response: " + e.getMessage());
                     }
 
                     if (pendingRequests.decrementAndGet() == 0) {
-                        updateResultView(resultView, "Filtered Results:");
+                        if (!findedForParks) {
+                            updateResultView(resultView, "No parks found within the radius");
+                        } else {
+                            updateResultView(resultView, "Filtered Results:");
+                        }
                     }
                 },
-                error -> {
-                    Log.e("DistanceMatrixError", "Error fetching distance: " + error.getMessage());
-                    if (pendingRequests.decrementAndGet() == 0) {
-                        updateResultView(resultView, "Filtered Results:");
-                    }
-                }
+                error -> Log.e("DistanceMatrixError", "Error fetching distance: " + error.getMessage())
         );
 
         queue.add(distanceRequest);
     }
 
-    private boolean isParkAlreadyAdded(String parkId) {
-        return addedParks.contains(parkId);
+    private void updateResultView(TextView resultView, String text) {
+        new Handler(Looper.getMainLooper()).post(() -> resultView.setText(text));
     }
-
-    private void markParkAsAdded(String parkId) {
-        addedParks.add(parkId);
+    private boolean nameChecker(String name){
+        if(name.contains("Ando")||name.contains("gyol")||name.contains("Resort")||name.contains("Մատուռ")||name.contains("մատուռ")||name.contains("Hangsti Goti")||name.contains("Djour")||name.contains("Cakhkasar")||name.contains("Hotel")||name.contains("hotel")){
+            return false;
+        }
+        return true;
     }
-
-    private void addPlaceToContainer(JSONObject place, LinearLayout container, String apiKey, String distanceText) {
+    private void addPlaceToContainer(JSONObject place, LinearLayout container, String apiKey,String distanceText,int radius) {
         try {
-            String name = place.getString("name");
-            String photoUrl = getPhotoUrl(place, apiKey);
+            if(radius>=Float.parseFloat(distanceText.substring(0, distanceText.length() - 2)) && nameChecker(place.getString("name"))){
+                String name = place.getString("name");
+                String photoUrl = getPhotoUrl(place, apiKey);
+                findedForParks =true;
+                LinearLayout buttonLayout = new LinearLayout(container.getContext());
+                buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
+                buttonLayout.setBackgroundResource(android.R.drawable.btn_default);
+                buttonLayout.setPadding(16, 16, 16, 16);
+                buttonLayout.setClickable(true);
+                buttonLayout.setFocusable(true);
 
-            // Create a new LinearLayout to act as a "button"
-            LinearLayout buttonLayout = new LinearLayout(container.getContext());
-            buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
-            buttonLayout.setBackgroundResource(android.R.drawable.btn_default);
-            buttonLayout.setPadding(16, 16, 16, 16);
-            buttonLayout.setClickable(true);
-            buttonLayout.setFocusable(true);
+                ImageView imageView = new ImageView(container.getContext());
+                int imageSize = 150;
+                LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(imageSize, imageSize);
+                imageView.setLayoutParams(imageParams);
+                imageView.setImageResource(R.drawable.download);
 
-            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-            );
-            layoutParams.setMargins(0, 0, 0, 10);
-            buttonLayout.setLayoutParams(layoutParams);
+                if (photoUrl != null) {
+                    RequestQueue queue = Volley.newRequestQueue(container.getContext());
+                    ImageRequest imageRequest = new ImageRequest(photoUrl,
+                            response -> imageView.setImageDrawable(new BitmapDrawable(container.getResources(), response)),
+                            0, 0, null, null,
+                            error -> Log.e("ImageLoadError", "Error loading image: " + error.getMessage()));
+                    queue.add(imageRequest);
+                }
+                LinearLayout textContainer = new LinearLayout(container.getContext());
+                textContainer.setOrientation(LinearLayout.VERTICAL);
 
-            // Create ImageView for the park image
-            ImageView imageView = new ImageView(container.getContext());
-            int imageSize = 150;
-            LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(imageSize, imageSize);
-            imageParams.setMargins(0, 0, 16, 0);
-            imageView.setLayoutParams(imageParams);
-            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            imageView.setImageResource(R.drawable.download); // Default image
+                TextView textView = new TextView(container.getContext());
+                textView.setText(name);
+                textView.setTextSize(16);
 
-            // Load the actual image dynamically
-            if (photoUrl != null) {
-                RequestQueue queue = Volley.newRequestQueue(container.getContext());
-                ImageRequest imageRequest = new ImageRequest(photoUrl,
-                        response -> imageView.setImageDrawable(new BitmapDrawable(container.getResources(), response)),
-                        0, 0, null, null,
-                        error -> Log.e("ImageLoadError", "Error loading image: " + error.getMessage()));
-                queue.add(imageRequest);
+                TextView distanceView = new TextView(container.getContext());
+                distanceView.setText("Distance: " + distanceText);
+                distanceView.setTextSize(14);
+
+                textContainer.addView(textView);
+                textContainer.addView(distanceView);
+
+                buttonLayout.addView(imageView);
+                buttonLayout.addView(textContainer);
+
+                buttonLayout.setOnClickListener(v -> Toast.makeText(container.getContext(), "Clicked: " + name, Toast.LENGTH_SHORT).show());
+
+                container.addView(buttonLayout);
             }
-
-            // Create TextView for the park name and distance
-            TextView textView = new TextView(container.getContext());
-            textView.setText(name + " (" + distanceText + ")");
-            textView.setTextSize(16);
-            textView.setTextColor(container.getContext().getResources().getColor(android.R.color.black));
-
-            // Add ImageView and TextView to the button layout
-            buttonLayout.addView(imageView);
-            buttonLayout.addView(textView);
-
-            // Set click event
-            buttonLayout.setOnClickListener(v -> Toast.makeText(container.getContext(), "Clicked: " + name, Toast.LENGTH_SHORT).show());
-
-            // Add the layout to the container
-            container.addView(buttonLayout);
-
         } catch (JSONException e) {
-            Log.e("DEBUG", "Error adding place to container: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -213,36 +188,6 @@ public class CordinatesFinderParks {
         } catch (JSONException e) {
             Log.e("DEBUG", "Error extracting photo reference: " + e.getMessage());
         }
-        return null; // No photo available
-    }
-    private static final String[] excludedWords = {
-            "Hotel", "Restaurant", "Մատուռ", "Եկեղեցի", "Resort", "gyol",
-            "Hangsti", "goti", "Сар", "Xachasar"
-    };
-
-
-    private boolean shouldExclude(String placeName) {
-        // Check if the place name contains any of the excluded words
-        for (String word : excludedWords) {
-            if (placeName.toLowerCase().contains(word.toLowerCase())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private double parseDistance(String distanceText) {
-        try {
-            String[] parts = distanceText.split(" ");
-            double distanceInKm = Double.parseDouble(parts[0]);
-            return distanceInKm * 1000;
-        } catch (NumberFormatException e) {
-            Log.e("DEBUG", "Error parsing distance: " + distanceText, e);
-            return 0;
-        }
-    }
-
-    private void updateResultView(TextView resultView, String text) {
-        new Handler(Looper.getMainLooper()).post(() -> resultView.setText(text));
+        return null;
     }
 }

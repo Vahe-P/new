@@ -15,29 +15,36 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.GoogleMap;
 import com.google.firebase.auth.FirebaseAuth;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
+    private static final int MAP_REQUEST_CODE = 100; // Request code for the map activity
     private FusedLocationProviderClient fusedLocationProviderClient;
     private TextView resultView;
     private TextView recommendedText;
-    private GoogleMap googleMap;
-
     private Spinner fromWhereSpinner;
     private Spinner categorySpinner;
     private EditText searchBar;
     private Button searchButton;
     private Location userLocation;
-    String apiKey = "";
+
+    private LinearLayout resultsContainer;
+
+    private CordinatesFinderChurches cordinatesFinderChurches = new CordinatesFinderChurches();
+    private CordinatesFinderMuseums cordinatesFinderMuseums = new CordinatesFinderMuseums();
+    private CordinatesFinderArtGalleries cordinatesFinderArtGalleries = new CordinatesFinderArtGalleries();
+    private CordinatesFinderParks cordinatesFinderParks = new CordinatesFinderParks();
+    private CoordinatesFinderLibraries coordinatesFinderLibraries = new CoordinatesFinderLibraries();
+    private String apiKey = "AIzaSyDfylRP2UhEe-kcDiigAiECbCqL1HAJ3I4";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
         fromWhereSpinner = findViewById(R.id.numberSpinner);
         categorySpinner = findViewById(R.id.categorySpinner);
         recommendedText = findViewById(R.id.recommendedText);
-        LinearLayout resultsContainer = findViewById(R.id.resultsContainer);
+        resultsContainer = findViewById(R.id.resultsContainer);
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
@@ -77,53 +84,25 @@ public class MainActivity extends AppCompatActivity {
         searchButton.setOnClickListener(v -> {
             recommendedText.setText("Result");
             searchBar.setEnabled(false);
+            searchBar.setEnabled(true);
+            resultsContainer.removeAllViews();
             if (userLocation != null) {
                 String fromWhere = fromWhereSpinner.getSelectedItem().toString().toLowerCase();
-                double userLatitude = userLocation.getLatitude();
-                double userLongitude = userLocation.getLongitude();
                 int radius = searchBar.getText().toString().isEmpty() ? 5 : Integer.parseInt(searchBar.getText().toString());
                 String selectedCategory = categorySpinner.getSelectedItem().toString().toLowerCase();
 
-                CordinatesFinderChurches cordinatesFinderChurches=new CordinatesFinderChurches();
-                CordinatesFinderMuseums cordinatesFinderMuseums=new CordinatesFinderMuseums();
-                CordinatesFinderArtGalleries cordinatesFinderArtGalleries=new CordinatesFinderArtGalleries();
-                CordinatesFinderParks cordinatesFinderParks=new CordinatesFinderParks();
                 if (fromWhere.equals("from my place")) {
-                    switch (selectedCategory){
-
-                        case "churches":
-                            cordinatesFinderChurches.getChurchCoordinates(userLatitude, userLongitude, radius,apiKey,resultView,resultsContainer);
-                            break;
-                        case "museums":
-                            cordinatesFinderMuseums.getMuseumCoordinates(userLatitude,userLongitude,radius,apiKey,resultView,resultsContainer);
-                            break;
-                        case "art galleries":
-                            cordinatesFinderArtGalleries.getArtGalleryCoordinates(userLatitude,userLongitude,radius,resultView,resultsContainer);
-                            break;
-                        case "parks":
-                            //cordinatesFinderParks.getParkCoordinatesAndDistance(userLatitude,userLongitude,radius,resultView);
-                            break;
-
-                    }
-
+                    double userLatitude = userLocation.getLatitude();
+                    double userLongitude = userLocation.getLongitude();
+                    callSearchFunction(selectedCategory, userLatitude, userLongitude, radius);
                 } else {
-                    double userLatitudeChoosen = 0;
-                    double userLongitudeChoosen = 0;
-                    cordinatesFinderChurches.getChurchCoordinates(userLatitudeChoosen, userLongitudeChoosen, radius,apiKey,resultView,resultsContainer);
+                    // Open Map Activity to choose a location
+                    Intent mapIntent = new Intent(MainActivity.this, Map.class);
+                    startActivityForResult(mapIntent, MAP_REQUEST_CODE);
                 }
             } else {
-
                 Toast.makeText(MainActivity.this, "Location not available. Please try again.", Toast.LENGTH_SHORT).show();
             }
-        });
-
-        ImageButton discoverButton = findViewById(R.id.discoverButton);
-        discoverButton.setOnClickListener(v -> {});
-
-        ImageButton profileButton = findViewById(R.id.profileButton);
-        profileButton.setOnClickListener(v -> {
-            Intent profileIntent = new Intent(MainActivity.this, ProfileActivity.class);
-            startActivity(profileIntent);
         });
 
         getLocation();
@@ -142,13 +121,39 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                getLocation();
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == MAP_REQUEST_CODE && resultCode == RESULT_OK) {
+            if (data != null) {
+                double userLatitude = data.getDoubleExtra("latitude", 0.0);
+                double userLongitude = data.getDoubleExtra("longitude", 0.0);
+                int radius = searchBar.getText().toString().isEmpty() ? 5 : Integer.parseInt(searchBar.getText().toString());
+                String selectedCategory = categorySpinner.getSelectedItem().toString().toLowerCase();
+
+                callSearchFunction(selectedCategory, userLatitude, userLongitude, radius);
             }
+        }
+    }
+
+    private void callSearchFunction(String category, double latitude, double longitude, int radius) {
+        switch (category) {
+            case "churches":
+                cordinatesFinderChurches.getChurchCoordinates(latitude, longitude, radius, apiKey, resultView, resultsContainer);
+                break;
+            case "museums":
+                cordinatesFinderMuseums.getMuseumCoordinates(latitude, longitude, radius, apiKey, resultView, resultsContainer);
+                break;
+            case "art galleries":
+                cordinatesFinderArtGalleries.getArtGalleryCoordinates(latitude, longitude, radius,apiKey, resultView, resultsContainer);
+                break;
+            case "parks":
+                cordinatesFinderParks.getParkCoordinates(latitude, longitude, radius,apiKey, resultView, resultsContainer);
+                break;
+
+            case "library":
+                coordinatesFinderLibraries.getLibraryCoordinates(latitude, longitude, radius,apiKey, resultView, resultsContainer);
+                break;
         }
     }
 }

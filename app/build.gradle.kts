@@ -45,6 +45,9 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation ("com.google.android.libraries.places:places:2.7.0")
     implementation ("com.squareup.okhttp3:okhttp:4.11.0")
+    implementation ("com.android.volley:volley:1.2.1")
+    implementation ("com.google.maps.android:android-maps-utils:2.3.0")
+
     implementation(libs.play.services.maps)
 
     testImplementation(libs.junit)
