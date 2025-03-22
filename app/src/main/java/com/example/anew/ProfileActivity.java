@@ -68,7 +68,7 @@ public class ProfileActivity extends AppCompatActivity {
 
     @Override
     public boolean onSupportNavigateUp() {
-        finish(); 
+        finish();
         return true;
     }
 
@@ -79,7 +79,7 @@ public class ProfileActivity extends AppCompatActivity {
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
-                        
+
                         FirebaseAuth.getInstance().signOut();
 
                         Intent loginIntent = new Intent(ProfileActivity.this, LoginActivity.class);

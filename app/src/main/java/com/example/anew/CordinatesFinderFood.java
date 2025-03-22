@@ -1,44 +1,41 @@
 package com.example.anew;
 
+import android.content.Intent;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Handler;
 import android.os.Looper;
-import android.widget.Button;
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.util.Log;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.ImageRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 
-import android.content.Intent;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import android.graphics.drawable.BitmapDrawable;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
+public class CordinatesFinderFood {
+    public boolean findedForFastFoods=false;
 
-import com.android.volley.toolbox.ImageRequest;
 
-public class CordinatesFinderChurches {
-    public boolean findedForChurches=false;
     private void SearchText(TextView resultView) {
-        new Handler(Looper.getMainLooper()).post(() -> resultView.setText("Searching for churches..."));
+        new Handler(Looper.getMainLooper()).post(() -> resultView.setText("Searching for fast-foods..."));
     }
 
-    public void getChurchCoordinates(double userLat, double userLng, int radius, String apiKey, TextView resultView, LinearLayout resultsContainer) {
+    public void getFoodCoordinates(double userLat, double userLng, int radius, String apiKey, TextView resultView, LinearLayout resultsContainer) {
         SearchText(resultView);
         String url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" +
                 userLat + "," + userLng +
                 "&radius=" + radius * 1000 + // radius in meters
-                "&type=church" +
+                "&type=restaurant" + // Searching for restaurants
+                "&keyword=fast+food"+
                 "&key=" + apiKey;
 
         RequestQueue queue = Volley.newRequestQueue(resultView.getContext());
@@ -61,7 +58,7 @@ public class CordinatesFinderChurches {
                                 getStreetDistance(userLat, userLng, lat, lng, radius, apiKey, coordinates, place, resultView, pendingRequests, results, resultsContainer);
                             }
                         } else {
-                            updateResultView(resultView, "No churches found within the radius.");
+                            updateResultView(resultView, "No museums found within the radius.");
                         }
                     } catch (Exception e) {
                         updateResultView(resultView, "Error parsing the response.");
@@ -90,13 +87,11 @@ public class CordinatesFinderChurches {
                             JSONObject elements = rows.getJSONObject(0).getJSONArray("elements").getJSONObject(0);
                             if (elements.getString("status").equals("OK")) {
                                 String distanceText = elements.getJSONObject("distance").getString("text"); // E.g., "2.5 km"
-
                                 coordinates.append(place.getString("name")).append(": ")
                                         .append(destLat).append(", ").append(destLng)
                                         .append(" (").append(distanceText).append(" via street)\n");
 
-                                // Pass distanceText to addPlaceToContainer
-                                addPlaceToContainer(place, container, apiKey, distanceText,radius, userLat,  userLng,  destLat, destLng);
+                                addPlaceToContainer(place, container, apiKey, distanceText, radius, userLat,  userLng,  destLat,  destLng);
                             } else {
                                 coordinates.append("Distance unavailable for: ").append(place.getString("name")).append("\n");
                             }
@@ -106,8 +101,8 @@ public class CordinatesFinderChurches {
                     }
 
                     if (pendingRequests.decrementAndGet() == 0) {
-                        if (!findedForChurches) {
-                            updateResultView(resultView, "No churches found within the radius");
+                        if (!findedForFastFoods) {
+                            updateResultView(resultView, "No museums found within the radius");
                         } else {
                             updateResultView(resultView, "Filtered Results:");
                         }
@@ -119,18 +114,21 @@ public class CordinatesFinderChurches {
         queue.add(distanceRequest);
     }
 
-
     private void updateResultView(TextView resultView, String text) {
         new Handler(Looper.getMainLooper()).post(() -> resultView.setText(text));
     }
-
-    private void addPlaceToContainer(JSONObject place, LinearLayout container, String apiKey, String distanceText,int radius,double userLat, double userLng, double destLat, double destLng) {
+    private boolean nameChecker(String name){
+        if(name.contains("Ando")|| name.contains("Museum")){
+            return false;
+        }
+        return true;
+    }
+    private void addPlaceToContainer(JSONObject place, LinearLayout container, String apiKey,String distanceText,int radius,double userLat, double userLng, double destLat, double destLng) {
         try {
-            if(radius>=Float.parseFloat(distanceText.substring(0, distanceText.length() - 2))){
-                findedForChurches =true;
+            if(radius>=Float.parseFloat(distanceText.substring(0, distanceText.length() - 2)) && nameChecker(place.getString("name"))){
                 String name = place.getString("name");
                 String photoUrl = getPhotoUrl(place, apiKey);
-
+                findedForFastFoods =true;
                 LinearLayout buttonLayout = new LinearLayout(container.getContext());
                 buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
                 buttonLayout.setBackgroundResource(android.R.drawable.btn_default);
@@ -152,8 +150,6 @@ public class CordinatesFinderChurches {
                             error -> Log.e("ImageLoadError", "Error loading image: " + error.getMessage()));
                     queue.add(imageRequest);
                 }
-
-                // Container for name + distance
                 LinearLayout textContainer = new LinearLayout(container.getContext());
                 textContainer.setOrientation(LinearLayout.VERTICAL);
 
@@ -180,14 +176,12 @@ public class CordinatesFinderChurches {
                     container.getContext().startActivity(intent);
                 });
 
-
                 container.addView(buttonLayout);
             }
         } catch (JSONException e) {
             e.printStackTrace();
         }
     }
-
 
     private String getPhotoUrl(JSONObject place, String apiKey) {
         try {

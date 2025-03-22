@@ -1,5 +1,6 @@
 package com.example.anew;
 
+import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 import android.widget.Button;
@@ -27,7 +28,7 @@ import android.widget.Toast;
 import com.android.volley.toolbox.ImageRequest;
 
 public class CordinatesFinderMuseums {
-    public boolean findedForMuseums=false;
+    public boolean findedForArtGalleriess=false;
     private void SearchText(TextView resultView) {
         new Handler(Looper.getMainLooper()).post(() -> resultView.setText("Searching for museums..."));
     }
@@ -37,7 +38,7 @@ public class CordinatesFinderMuseums {
         String url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" +
                 userLat + "," + userLng +
                 "&radius=" + radius * 1000 + // radius in meters
-                "&type=museum" +
+                "&keyword=museum" +
                 "&key=" + apiKey;
 
         RequestQueue queue = Volley.newRequestQueue(resultView.getContext());
@@ -93,7 +94,7 @@ public class CordinatesFinderMuseums {
                                         .append(destLat).append(", ").append(destLng)
                                         .append(" (").append(distanceText).append(" via street)\n");
 
-                                addPlaceToContainer(place, container, apiKey, distanceText, radius);
+                                addPlaceToContainer(place, container, apiKey, distanceText, radius, userLat,  userLng,  destLat,  destLng);
                             } else {
                                 coordinates.append("Distance unavailable for: ").append(place.getString("name")).append("\n");
                             }
@@ -103,7 +104,7 @@ public class CordinatesFinderMuseums {
                     }
 
                     if (pendingRequests.decrementAndGet() == 0) {
-                        if (!findedForMuseums) {
+                        if (!findedForArtGalleriess) {
                             updateResultView(resultView, "No museums found within the radius");
                         } else {
                             updateResultView(resultView, "Filtered Results:");
@@ -120,17 +121,17 @@ public class CordinatesFinderMuseums {
         new Handler(Looper.getMainLooper()).post(() -> resultView.setText(text));
     }
     private boolean nameChecker(String name){
-        if(name.contains("Ando")|| name.contains("Museum")){
+        if(name.contains("Studio")||name.contains("Ando")){
             return false;
         }
         return true;
     }
-    private void addPlaceToContainer(JSONObject place, LinearLayout container, String apiKey,String distanceText,int radius) {
+    private void addPlaceToContainer(JSONObject place, LinearLayout container, String apiKey,String distanceText,int radius,double userLat, double userLng, double destLat, double destLng) {
         try {
             if(radius>=Float.parseFloat(distanceText.substring(0, distanceText.length() - 2)) && nameChecker(place.getString("name"))){
                 String name = place.getString("name");
                 String photoUrl = getPhotoUrl(place, apiKey);
-                findedForMuseums =true;
+                findedForArtGalleriess =true;
                 LinearLayout buttonLayout = new LinearLayout(container.getContext());
                 buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
                 buttonLayout.setBackgroundResource(android.R.drawable.btn_default);
@@ -169,8 +170,14 @@ public class CordinatesFinderMuseums {
                 buttonLayout.addView(imageView);
                 buttonLayout.addView(textContainer);
 
-                buttonLayout.setOnClickListener(v -> Toast.makeText(container.getContext(), "Clicked: " + name, Toast.LENGTH_SHORT).show());
-
+                buttonLayout.setOnClickListener(v -> {
+                    Intent intent = new Intent(container.getContext(), MapActivity.class);
+                    intent.putExtra("userLat", userLat);
+                    intent.putExtra("userLng", userLng);
+                    intent.putExtra("destLat", destLat);
+                    intent.putExtra("destLng", destLng);
+                    container.getContext().startActivity(intent);
+                });
                 container.addView(buttonLayout);
             }
         } catch (JSONException e) {

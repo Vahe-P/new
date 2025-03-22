@@ -1,5 +1,6 @@
 package com.example.anew;
 
+import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 import android.widget.Button;
@@ -93,7 +94,7 @@ public class CordinatesFinderArtGalleries {
                                         .append(destLat).append(", ").append(destLng)
                                         .append(" (").append(distanceText).append(" via street)\n");
 
-                                addPlaceToContainer(place, container, apiKey, distanceText, radius);
+                                addPlaceToContainer(place, container, apiKey, distanceText, radius, userLat,  userLng,  destLat,  destLng);
                             } else {
                                 coordinates.append("Distance unavailable for: ").append(place.getString("name")).append("\n");
                             }
@@ -125,7 +126,7 @@ public class CordinatesFinderArtGalleries {
         }
         return true;
     }
-    private void addPlaceToContainer(JSONObject place, LinearLayout container, String apiKey,String distanceText,int radius) {
+    private void addPlaceToContainer(JSONObject place, LinearLayout container, String apiKey,String distanceText,int radius,double userLat, double userLng, double destLat, double destLng) {
         try {
             if(radius>=Float.parseFloat(distanceText.substring(0, distanceText.length() - 2)) && nameChecker(place.getString("name"))){
                 String name = place.getString("name");
@@ -169,8 +170,14 @@ public class CordinatesFinderArtGalleries {
                 buttonLayout.addView(imageView);
                 buttonLayout.addView(textContainer);
 
-                buttonLayout.setOnClickListener(v -> Toast.makeText(container.getContext(), "Clicked: " + name, Toast.LENGTH_SHORT).show());
-
+                buttonLayout.setOnClickListener(v -> {
+                    Intent intent = new Intent(container.getContext(), MapActivity.class);
+                    intent.putExtra("userLat", userLat);
+                    intent.putExtra("userLng", userLng);
+                    intent.putExtra("destLat", destLat);
+                    intent.putExtra("destLng", destLng);
+                    container.getContext().startActivity(intent);
+                });
                 container.addView(buttonLayout);
             }
         } catch (JSONException e) {
