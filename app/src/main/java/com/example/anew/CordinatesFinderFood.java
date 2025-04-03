@@ -117,17 +117,18 @@ public class CordinatesFinderFood {
     private void updateResultView(TextView resultView, String text) {
         new Handler(Looper.getMainLooper()).post(() -> resultView.setText(text));
     }
-    private boolean nameChecker(String name){
-        if(name.contains("Ando")|| name.contains("Museum")){
+    private boolean nameChecker(String name,String photoUrl){
+
+        if(name.contains("Ando")|| name.contains("Museum") ||photoUrl==null ){
             return false;
         }
         return true;
     }
     private void addPlaceToContainer(JSONObject place, LinearLayout container, String apiKey,String distanceText,int radius,double userLat, double userLng, double destLat, double destLng) {
         try {
-            if(radius>=Float.parseFloat(distanceText.substring(0, distanceText.length() - 2)) && nameChecker(place.getString("name"))){
+            String photoUrl = getPhotoUrl(place, apiKey);
+            if(radius>=Float.parseFloat(distanceText.substring(0, distanceText.length() - 2)) && nameChecker(place.getString("name"),photoUrl)){
                 String name = place.getString("name");
-                String photoUrl = getPhotoUrl(place, apiKey);
                 findedForFastFoods =true;
                 LinearLayout buttonLayout = new LinearLayout(container.getContext());
                 buttonLayout.setOrientation(LinearLayout.HORIZONTAL);

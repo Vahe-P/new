@@ -1,4 +1,8 @@
+
+
 package com.example.anew;
+
+
 
 
 import android.Manifest;
@@ -6,15 +10,19 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+
+
 
 
 import androidx.annotation.NonNull;
@@ -24,12 +32,22 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 
+
+
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.firebase.auth.FirebaseAuth;
 
 
+import java.util.ArrayList;
+import java.util.List;
+
+
+
+
 public class MainActivity extends AppCompatActivity {
+
+
 
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
@@ -37,14 +55,15 @@ public class MainActivity extends AppCompatActivity {
     private FusedLocationProviderClient fusedLocationProviderClient;
     private TextView resultView;
     private TextView recommendedText;
-    private Spinner fromWhereSpinner;
-    private Spinner categorySpinner;
-    private EditText searchBar;
     private Button searchButton;
     private Location userLocation;
 
 
+
+
     private LinearLayout resultsContainer;
+
+
 
 
     private CordinatesFinderChurches cordinatesFinderChurches = new CordinatesFinderChurches();
@@ -56,13 +75,21 @@ public class MainActivity extends AppCompatActivity {
     private String apiKey = "AIzaSyDfylRP2UhEe-kcDiigAiECbCqL1HAJ3I4";
 
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
 
+
+        // Check if the user is a guest or logged in
         boolean isGuest = getIntent().getBooleanExtra("isGuest", false);
         boolean fromProfile = getIntent().getBooleanExtra("fromProfile", false);
+        Log.d("DEBUG", "fromProfile: " + fromProfile);
+
+
+        // Redirect to LoginActivity if the user is not logged in and not a guest
         if (!isGuest && FirebaseAuth.getInstance().getCurrentUser() == null && !fromProfile) {
             Intent loginIntent = new Intent(MainActivity.this, LoginActivity.class);
             startActivity(loginIntent);
@@ -71,62 +98,86 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
+        // Set the layout for the activity
         setContentView(R.layout.activity_main);
 
 
+        // Initialize views
         resultView = findViewById(R.id.text_location);
-        searchBar = findViewById(R.id.searchBar);
         searchButton = findViewById(R.id.searchButton);
-        fromWhereSpinner = findViewById(R.id.numberSpinner);
-        categorySpinner = findViewById(R.id.categorySpinner);
         recommendedText = findViewById(R.id.recommendedText);
         resultsContainer = findViewById(R.id.resultsContainer);
 
 
+        // Initialize FusedLocationProviderClient
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
 
-        ArrayAdapter<CharSequence> numberAdapter = ArrayAdapter.createFromResource(this,
-                R.array.fromWhereArr, android.R.layout.simple_spinner_item);
-        numberAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        fromWhereSpinner.setAdapter(numberAdapter);
+        // Retrieve data passed from ProfileActivity
+        final String fromWhere = getIntent().getStringExtra("selectedFromWhere") != null
+                ? getIntent().getStringExtra("selectedFromWhere")
+                : "from my place";
 
 
-        ArrayAdapter<CharSequence> categoryAdapter = ArrayAdapter.createFromResource(this,
-                R.array.category_array, android.R.layout.simple_spinner_item);
-        categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        categorySpinner.setAdapter(categoryAdapter);
+        final int radius = getIntent().getStringExtra("inputDistance") != null &&
+                !getIntent().getStringExtra("inputDistance").isEmpty()
+                ? Integer.parseInt(getIntent().getStringExtra("inputDistance"))
+                : 5;
 
 
+        Log.d("DEBUG", "Received fromProfile: " + fromProfile + ", fromWhere: " + fromWhere + ", radius: " + radius);
+
+
+        // Set up the search button click listener
+        // Modify search button click listener to check selected checkboxes
         searchButton.setOnClickListener(v -> {
             recommendedText.setText("Result");
-            searchBar.setEnabled(false);
-            searchBar.setEnabled(true);
             resultsContainer.removeAllViews();
+
+
+            Log.d("SEARCH", "fromWhere value: " + fromWhere);
+
+
             if (userLocation != null) {
-                String fromWhere = fromWhereSpinner.getSelectedItem().toString().toLowerCase();
-                int radius = searchBar.getText().toString().isEmpty() ? 5 : Integer.parseInt(searchBar.getText().toString());
-                String selectedCategory = categorySpinner.getSelectedItem().toString().toLowerCase();
+                List<String> selectedCategories = getSelectedCategories();
 
 
-                if (fromWhere.equals("from my place")) {
+                if (!selectedCategories.isEmpty()) {
                     double userLatitude = userLocation.getLatitude();
                     double userLongitude = userLocation.getLongitude();
-                    callSearchFunction(selectedCategory, userLatitude, userLongitude, radius);
+
+
+                    if (fromWhere.equals("From My Place")) {
+                        // Call the search function with the user's location
+                        for (String category : selectedCategories) {
+                            callSearchFunction(category, userLatitude, userLongitude, radius);
+                        }
+                    } else {
+                        // Open Map Activity to choose a location
+                        Intent mapIntent = new Intent(MainActivity.this, Map.class);
+                        startActivityForResult(mapIntent, MAP_REQUEST_CODE);
+                    }
                 } else {
-                    // Open Map Activity to choose a location
-                    Intent mapIntent = new Intent(MainActivity.this, Map.class);
-                    startActivityForResult(mapIntent, MAP_REQUEST_CODE);
+                    Toast.makeText(MainActivity.this, "Please select at least one category.", Toast.LENGTH_SHORT).show();
                 }
             } else {
                 Toast.makeText(MainActivity.this, "Location not available. Please try again.", Toast.LENGTH_SHORT).show();
             }
         });
+
+
+        // Set up the profile button click listener
         ImageButton profileButton = findViewById(R.id.profileButton);
         profileButton.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, ProfileActivity.class);
+            // Pass current values for "fromWhere" and "radius"
+            intent.putExtra("selectedFromWhere", fromWhere);
+            intent.putExtra("inputDistance", String.valueOf(radius));
             startActivity(intent);
         });
+
+
+        // Set up the discover button click listener
         ImageButton discoverButton = findViewById(R.id.discoverButton);
         discoverButton.setOnClickListener(v ->
                 Toast.makeText(MainActivity.this, "You are already in your profile.", Toast.LENGTH_SHORT).show()
@@ -139,6 +190,38 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    private List<String> getSelectedCategories() {
+        List<String> selectedCategories = new ArrayList<>();
+
+
+        CheckBox checkChurches = findViewById(R.id.checkChurches);
+        CheckBox checkMuseums = findViewById(R.id.checkMuseums);
+        CheckBox checkArtGalleries = findViewById(R.id.checkArtGalleries);
+        CheckBox checkParks = findViewById(R.id.checkParks);
+        CheckBox checkLibraries = findViewById(R.id.checkLibraries);
+
+
+        if (checkChurches != null && checkChurches.isChecked()) selectedCategories.add("churches");
+        if (checkMuseums != null && checkMuseums.isChecked()) selectedCategories.add("museums");
+        if (checkArtGalleries != null && checkArtGalleries.isChecked()) selectedCategories.add("art galleries");
+        if (checkParks != null && checkParks.isChecked()) selectedCategories.add("parks");
+        if (checkLibraries != null && checkLibraries.isChecked()) selectedCategories.add("libraries");
+
+
+        return selectedCategories;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
     private void getLocation() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -147,9 +230,25 @@ public class MainActivity extends AppCompatActivity {
                     LOCATION_PERMISSION_REQUEST_CODE);
         } else {
             fusedLocationProviderClient.getLastLocation()
-                    .addOnSuccessListener(this, location -> userLocation = location);
+                    .addOnSuccessListener(this, location -> {
+                        if (location != null) {
+                            userLocation = location;
+                            // Load recommended places after location is retrieved
+                            loadRecommendedPlaces();
+                        } else {
+                            Log.e("LOCATION", "Failed to get location.");
+                            Toast.makeText(this, "Location is not available. Try again later.", Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e("LOCATION", "Error retrieving location: " + e.getMessage());
+                        Toast.makeText(this, "Error retrieving location.", Toast.LENGTH_SHORT).show();
+                    });
         }
     }
+
+
+
 
 
     @Override
@@ -161,14 +260,33 @@ public class MainActivity extends AppCompatActivity {
             if (data != null) {
                 double userLatitude = data.getDoubleExtra("latitude", 0.0);
                 double userLongitude = data.getDoubleExtra("longitude", 0.0);
-                int radius = searchBar.getText().toString().isEmpty() ? 5 : Integer.parseInt(searchBar.getText().toString());
-                String selectedCategory = categorySpinner.getSelectedItem().toString().toLowerCase();
 
 
-                callSearchFunction(selectedCategory, userLatitude, userLongitude, radius);
+                // Get radius from intent (just like in onCreate)
+                String radiusInput = getIntent().getStringExtra("inputDistance");
+                int radius = (radiusInput == null || radiusInput.isEmpty()) ? 5 : Integer.parseInt(radiusInput);
+
+
+                // Get selected categories from checkboxes
+                List<String> selectedCategories = getSelectedCategories();
+
+
+                if (!selectedCategories.isEmpty()) {
+                    for (String category : selectedCategories) {
+                        callSearchFunction(category, userLatitude, userLongitude, radius);
+                    }
+                } else {
+                    Toast.makeText(this, "Please select at least one category.", Toast.LENGTH_SHORT).show();
+                }
             }
         }
     }
+
+
+
+
+
+
 
 
     private void callSearchFunction(String category, double latitude, double longitude, int radius) {
@@ -180,43 +298,45 @@ public class MainActivity extends AppCompatActivity {
                 cordinatesFinderMuseums.getMuseumCoordinates(latitude, longitude, radius, apiKey, resultView, resultsContainer);
                 break;
             case "art galleries":
-                cordinatesFinderArtGalleries.getArtGalleryCoordinates(latitude, longitude, radius,apiKey, resultView, resultsContainer);
+                cordinatesFinderArtGalleries.getArtGalleryCoordinates(latitude, longitude, radius, apiKey, resultView, resultsContainer);
                 break;
             case "parks":
-                cordinatesFinderParks.getParkCoordinates(latitude, longitude, radius,apiKey, resultView, resultsContainer);
+                cordinatesFinderParks.getParkCoordinates(latitude, longitude, radius, apiKey, resultView, resultsContainer);
                 break;
-
-
-            case "library":
-                coordinatesFinderLibraries.getLibraryCoordinates(latitude, longitude, radius,apiKey, resultView, resultsContainer);
+            case "libraries":
+                coordinatesFinderLibraries.getLibraryCoordinates(latitude, longitude, radius, apiKey, resultView, resultsContainer);
+                break;
+            case "fastfood":
+                cordinatesFinderFood.getFoodCoordinates(latitude, longitude, radius, apiKey, resultView, resultsContainer);
                 break;
         }
     }
     private void loadRecommendedPlaces() {
         resultsContainer.removeAllViews(); // Clear previous recommendations
+        if (userLocation != null) {
+            double userLatitude = userLocation.getLatitude();
+            double userLongitude = userLocation.getLongitude();
+            int radius = 10;
+            Log.e("Fast", "HAsav ");
 
+            cordinatesFinderFood.getFoodCoordinates(userLatitude, userLongitude, radius, apiKey, resultView, resultsContainer);
 
-        String[] recommendedPlaces = {"Best Museums", "Famous Parks", "Top Libraries","Churches","FastFood"};
-
+        }else{
+            Log.e("Fast", "CHAsav ");
+        }
+        String[] recommendedPlaces = {"Best Museums", "Famous Parks", "Top Libraries","Churches"};
 
         for (String place : recommendedPlaces) {
             Button placeButton = new Button(this);
             placeButton.setText(place);
             placeButton.setOnClickListener(v -> {
                 recommendedText.setText("Result");
-                searchBar.setEnabled(false);
-                searchBar.setEnabled(true);
                 resultsContainer.removeAllViews();
                 performRecommendedSearch(place);
             });
-
-
             resultsContainer.addView(placeButton);
         }
-
-
     }
-
 
     // 🔍 Perform search when user clicks on a recommended button
     private void performRecommendedSearch(String placeType) {
@@ -224,6 +344,8 @@ public class MainActivity extends AppCompatActivity {
             double userLatitude = userLocation.getLatitude();
             double userLongitude = userLocation.getLongitude();
             int radius = 10; // Default radius for recommendations
+
+
 
 
             switch (placeType) {
@@ -239,12 +361,11 @@ public class MainActivity extends AppCompatActivity {
                 case "Churches":
                     cordinatesFinderChurches.getChurchCoordinates(userLatitude, userLongitude, radius, apiKey, resultView, resultsContainer);
                     break;
-                case "FastFood":
-                    cordinatesFinderFood.getFoodCoordinates(userLatitude, userLongitude, radius, apiKey, resultView, resultsContainer);
-                    break;
+
             }
         } else {
             Toast.makeText(this, "Location not available. Please try again.", Toast.LENGTH_SHORT).show();
         }
     }
 }
+
