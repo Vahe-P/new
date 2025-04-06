@@ -5,105 +5,110 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingBottom="0dp"
-    android:background="#f5f5f5">
+    android:background="#FFFFFF">
 
-
-    <RelativeLayout
-        android:id="@+id/topBar"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#6290EE"
-        android:padding="16dp"
-        android:elevation="4dp">
+        android:id="@+id/frameLayout">
 
+        <ImageView
+            android:id="@+id/backgroundImage"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentTop="true"
+            android:alpha="0.3"
+            android:scaleType="fitXY"
+            android:src="@drawable/image300x200" />
 
-        <TextView
-            android:id="@+id/appTitle"
+        <RelativeLayout
+            android:id="@+id/topBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:elevation="4dp">
+
+            <TextView
+                android:id="@+id/appTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:fontFamily="@/custom_font"
+                android:text="What you would like to find?"
+                android:textColor="#FFFFFF"
+                android:textSize="24sp" />
+        </RelativeLayout>
+
+        <GridLayout
+            android:id="@+id/choosingBars"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:fontFamily="@/custom_font"
-            android:text="Wanderly"
-            android:textColor="#FFFFFF"
-            android:textSize="24sp" />
-    </RelativeLayout>
+            android:layout_marginTop="50dp"
+            android:layout_gravity="center_horizontal"
+            android:columnCount="3"
+            android:gravity="center">
 
+            <CheckBox
+                android:id="@+id/checkChurches"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Churches" />
 
+            <CheckBox
+                android:id="@+id/checkMuseums"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Museums" />
 
+            <CheckBox
+                android:id="@+id/checkArtGalleries"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Art Galleries" />
 
-    <GridLayout
-        android:id="@+id/choosingBars"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/topBar"
-        android:layout_margin="16dp"
-        android:layout_marginTop="21dp"
-        android:layout_marginBottom="16dp"
-        android:columnCount="3"
-        android:gravity="center"
-        android:padding="8dp">
+            <CheckBox
+                android:id="@+id/checkParks"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Parks" />
 
+            <CheckBox
+                android:id="@+id/checkHotels"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Hotels" />
 
-        <CheckBox
-            android:id="@+id/checkChurches"
-            android:layout_width="wrap_content"
+            <CheckBox
+                android:id="@+id/checkLibraries"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Libraries" />
+        </GridLayout>
+
+        <Button
+            android:id="@+id/searchButton"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Churches" />
-
-
-        <CheckBox
-            android:id="@+id/checkMuseums"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Museums" />
-
-
-        <CheckBox
-            android:id="@+id/checkArtGalleries"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Art Galleries" />
-
-
-        <CheckBox
-            android:id="@+id/checkParks"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_columnSpan="2"
-            android:text="Parks" />
-
-
-        <CheckBox
-            android:id="@+id/checkLibraries"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Libraries" />
-    </GridLayout>
-
-
-    <Button
-        android:id="@+id/searchButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/choosingBars"
-        android:layout_margin="16dp"
-        android:text="Search"
-        android:backgroundTint="@color/login_button"
-        />
-
+            android:gravity="center"
+            android:layout_gravity="bottom"
+            android:layout_marginTop="20dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:text="Search"
+            android:backgroundTint="@color/your_color" />
+    </FrameLayout>
 
     <TextView
         android:id="@+id/recommendedText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/searchButton"
+        android:layout_below="@id/frameLayout"
         android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
         android:text="Recommended"
         android:textColor="#000000"
         android:textSize="18sp"
         android:fontFamily="sans-serif-medium" />
-
 
     <LinearLayout
         android:id="@+id/mainContent"
@@ -113,19 +118,12 @@
         android:orientation="vertical"
         android:layout_above="@id/bottomButtons">
 
-
-
-
-
-
-
-
         <TextView
             android:id="@+id/text_location"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
-            android:layout_margin="16dp"
+            android:layout_marginLeft="16dp"
             android:background="#AAFFFFFF"
             android:padding="8dp"
             android:text="Coordinates will appear here"
@@ -133,19 +131,27 @@
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="16dp">
-
+            android:layout_margin="0dp">
 
             <LinearLayout
-                android:id="@+id/resultsContainer"
+                android:id="@+id/recomContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical" />
         </ScrollView>
 
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="0dp">
 
+            <LinearLayout
+                android:id="@+id/resultsContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" />
+        </HorizontalScrollView>
     </LinearLayout>
-
 
     <LinearLayout
         android:id="@+id/bottomButtons"
@@ -159,7 +165,6 @@
         android:layout_marginLeft="0dp"
         android:layout_marginRight="0dp">
 
-
         <ImageButton
             android:id="@+id/discoverButton"
             android:layout_width="0dp"
@@ -169,7 +174,6 @@
             android:contentDescription="Discover"
             android:scaleType="centerInside"
             android:src="@android:drawable/ic_menu_compass" />
-
 
         <ImageButton
             android:id="@+id/profileButton"

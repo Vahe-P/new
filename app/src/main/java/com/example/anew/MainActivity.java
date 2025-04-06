@@ -1,17 +1,14 @@
-
-
 package com.example.anew;
-
-
-
 
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -22,33 +19,20 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-
-
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-
-
-
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.firebase.auth.FirebaseAuth;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
-
-
-
 public class MainActivity extends AppCompatActivity {
-
-
-
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     private static final int MAP_REQUEST_CODE = 100; // Request code for the map activity
@@ -58,13 +42,8 @@ public class MainActivity extends AppCompatActivity {
     private Button searchButton;
     private Location userLocation;
 
-
-
-
     private LinearLayout resultsContainer;
-
-
-
+    private LinearLayout recomContainer;
 
     private CordinatesFinderChurches cordinatesFinderChurches = new CordinatesFinderChurches();
     private CordinatesFinderMuseums cordinatesFinderMuseums = new CordinatesFinderMuseums();
@@ -72,22 +51,22 @@ public class MainActivity extends AppCompatActivity {
     private CordinatesFinderParks cordinatesFinderParks = new CordinatesFinderParks();
     private CoordinatesFinderLibraries coordinatesFinderLibraries = new CoordinatesFinderLibraries();
     private CordinatesFinderFood cordinatesFinderFood = new CordinatesFinderFood();
+    private CordinatesFinderHotels cordinatesHotels = new CordinatesFinderHotels();
     private String apiKey = "AIzaSyDfylRP2UhEe-kcDiigAiECbCqL1HAJ3I4";
-
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window window = getWindow();
+            window.setStatusBarColor(ContextCompat.getColor(this, R.color.your_color));
+        }
 
 
         // Check if the user is a guest or logged in
         boolean isGuest = getIntent().getBooleanExtra("isGuest", false);
         boolean fromProfile = getIntent().getBooleanExtra("fromProfile", false);
         Log.d("DEBUG", "fromProfile: " + fromProfile);
-
 
         // Redirect to LoginActivity if the user is not logged in and not a guest
         if (!isGuest && FirebaseAuth.getInstance().getCurrentUser() == null && !fromProfile) {
@@ -97,55 +76,46 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-
         // Set the layout for the activity
         setContentView(R.layout.activity_main);
-
 
         // Initialize views
         resultView = findViewById(R.id.text_location);
         searchButton = findViewById(R.id.searchButton);
         recommendedText = findViewById(R.id.recommendedText);
         resultsContainer = findViewById(R.id.resultsContainer);
-
+        recomContainer = findViewById(R.id.recomContainer);
 
         // Initialize FusedLocationProviderClient
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
-
 
         // Retrieve data passed from ProfileActivity
         final String fromWhere = getIntent().getStringExtra("selectedFromWhere") != null
                 ? getIntent().getStringExtra("selectedFromWhere")
                 : "from my place";
 
-
         final int radius = getIntent().getStringExtra("inputDistance") != null &&
                 !getIntent().getStringExtra("inputDistance").isEmpty()
                 ? Integer.parseInt(getIntent().getStringExtra("inputDistance"))
                 : 5;
 
-
         Log.d("DEBUG", "Received fromProfile: " + fromProfile + ", fromWhere: " + fromWhere + ", radius: " + radius);
-
 
         // Set up the search button click listener
         // Modify search button click listener to check selected checkboxes
         searchButton.setOnClickListener(v -> {
             recommendedText.setText("Result");
             resultsContainer.removeAllViews();
-
+            recomContainer.removeAllViews();
 
             Log.d("SEARCH", "fromWhere value: " + fromWhere);
-
 
             if (userLocation != null) {
                 List<String> selectedCategories = getSelectedCategories();
 
-
                 if (!selectedCategories.isEmpty()) {
                     double userLatitude = userLocation.getLatitude();
                     double userLongitude = userLocation.getLongitude();
-
 
                     if (fromWhere.equals("From My Place")) {
                         // Call the search function with the user's location
@@ -165,7 +135,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
         // Set up the profile button click listener
         ImageButton profileButton = findViewById(R.id.profileButton);
         profileButton.setOnClickListener(v -> {
@@ -176,51 +145,39 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-
         // Set up the discover button click listener
         ImageButton discoverButton = findViewById(R.id.discoverButton);
         discoverButton.setOnClickListener(v ->
-                Toast.makeText(MainActivity.this, "You are already in your profile.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(MainActivity.this, "You are already in Main.", Toast.LENGTH_SHORT).show()
         );
-
 
         getLocation();
 
         loadRecommendedPlaces();
-    }
 
+        // Change the color of checkboxes
+        changeCheckboxColor();
+    }
 
     private List<String> getSelectedCategories() {
         List<String> selectedCategories = new ArrayList<>();
-
 
         CheckBox checkChurches = findViewById(R.id.checkChurches);
         CheckBox checkMuseums = findViewById(R.id.checkMuseums);
         CheckBox checkArtGalleries = findViewById(R.id.checkArtGalleries);
         CheckBox checkParks = findViewById(R.id.checkParks);
         CheckBox checkLibraries = findViewById(R.id.checkLibraries);
-
+        CheckBox checkHotels = findViewById(R.id.checkHotels);
 
         if (checkChurches != null && checkChurches.isChecked()) selectedCategories.add("churches");
         if (checkMuseums != null && checkMuseums.isChecked()) selectedCategories.add("museums");
         if (checkArtGalleries != null && checkArtGalleries.isChecked()) selectedCategories.add("art galleries");
         if (checkParks != null && checkParks.isChecked()) selectedCategories.add("parks");
         if (checkLibraries != null && checkLibraries.isChecked()) selectedCategories.add("libraries");
-
+        if (checkHotels != null && checkHotels.isChecked()) selectedCategories.add("hotels");
 
         return selectedCategories;
     }
-
-
-
-
-
-
-
-
-
-
-
 
     private void getLocation() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
@@ -247,29 +204,21 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-
-
-
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
 
         if (requestCode == MAP_REQUEST_CODE && resultCode == RESULT_OK) {
             if (data != null) {
                 double userLatitude = data.getDoubleExtra("latitude", 0.0);
                 double userLongitude = data.getDoubleExtra("longitude", 0.0);
 
-
                 // Get radius from intent (just like in onCreate)
                 String radiusInput = getIntent().getStringExtra("inputDistance");
                 int radius = (radiusInput == null || radiusInput.isEmpty()) ? 5 : Integer.parseInt(radiusInput);
 
-
                 // Get selected categories from checkboxes
                 List<String> selectedCategories = getSelectedCategories();
-
 
                 if (!selectedCategories.isEmpty()) {
                     for (String category : selectedCategories) {
@@ -281,13 +230,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
-
-
-
-
-
-
 
     private void callSearchFunction(String category, double latitude, double longitude, int radius) {
         switch (category) {
@@ -309,10 +251,15 @@ public class MainActivity extends AppCompatActivity {
             case "fastfood":
                 cordinatesFinderFood.getFoodCoordinates(latitude, longitude, radius, apiKey, resultView, resultsContainer);
                 break;
+            case "hotels":
+                cordinatesHotels.getHotelCoordinates(latitude, longitude, radius, apiKey, resultView, resultsContainer);
+                break;
         }
     }
+
     private void loadRecommendedPlaces() {
-        resultsContainer.removeAllViews(); // Clear previous recommendations
+        resultsContainer.removeAllViews();
+        recomContainer.removeAllViews();// Clear previous recommendations
         if (userLocation != null) {
             double userLatitude = userLocation.getLatitude();
             double userLongitude = userLocation.getLongitude();
@@ -321,10 +268,10 @@ public class MainActivity extends AppCompatActivity {
 
             cordinatesFinderFood.getFoodCoordinates(userLatitude, userLongitude, radius, apiKey, resultView, resultsContainer);
 
-        }else{
+        } else {
             Log.e("Fast", "CHAsav ");
         }
-        String[] recommendedPlaces = {"Best Museums", "Famous Parks", "Top Libraries","Churches"};
+        String[] recommendedPlaces = {"Best Museums", "Famous Parks", "Top Libraries", "Churches"};
 
         for (String place : recommendedPlaces) {
             Button placeButton = new Button(this);
@@ -332,9 +279,10 @@ public class MainActivity extends AppCompatActivity {
             placeButton.setOnClickListener(v -> {
                 recommendedText.setText("Result");
                 resultsContainer.removeAllViews();
+                recomContainer.removeAllViews();
                 performRecommendedSearch(place);
             });
-            resultsContainer.addView(placeButton);
+            recomContainer.addView(placeButton);
         }
     }
 
@@ -344,9 +292,6 @@ public class MainActivity extends AppCompatActivity {
             double userLatitude = userLocation.getLatitude();
             double userLongitude = userLocation.getLongitude();
             int radius = 10; // Default radius for recommendations
-
-
-
 
             switch (placeType) {
                 case "Best Museums":
@@ -361,11 +306,37 @@ public class MainActivity extends AppCompatActivity {
                 case "Churches":
                     cordinatesFinderChurches.getChurchCoordinates(userLatitude, userLongitude, radius, apiKey, resultView, resultsContainer);
                     break;
-
             }
         } else {
             Toast.makeText(this, "Location not available. Please try again.", Toast.LENGTH_SHORT).show();
         }
     }
-}
 
+    private void changeCheckboxColor() {
+        CheckBox checkChurches = findViewById(R.id.checkChurches);
+        CheckBox checkMuseums = findViewById(R.id.checkMuseums);
+        CheckBox checkArtGalleries = findViewById(R.id.checkArtGalleries);
+        CheckBox checkParks = findViewById(R.id.checkParks);
+        CheckBox checkLibraries = findViewById(R.id.checkLibraries);
+        CheckBox checkHotels = findViewById(R.id.checkHotels);
+
+        if (checkChurches != null) {
+            checkChurches.setButtonTintList(ContextCompat.getColorStateList(this, R.color.my_checkbox_color));
+        }
+        if (checkMuseums != null) {
+            checkMuseums.setButtonTintList(ContextCompat.getColorStateList(this, R.color.my_checkbox_color));
+        }
+        if (checkArtGalleries != null) {
+            checkArtGalleries.setButtonTintList(ContextCompat.getColorStateList(this, R.color.my_checkbox_color));
+        }
+        if (checkParks != null) {
+            checkParks.setButtonTintList(ContextCompat.getColorStateList(this, R.color.my_checkbox_color));
+        }
+        if (checkLibraries != null) {
+            checkLibraries.setButtonTintList(ContextCompat.getColorStateList(this, R.color.my_checkbox_color));
+        }
+        if (checkHotels != null) {
+            checkHotels.setButtonTintList(ContextCompat.getColorStateList(this, R.color.my_checkbox_color));
+        }
+    }
+}

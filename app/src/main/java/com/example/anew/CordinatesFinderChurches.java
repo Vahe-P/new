@@ -35,7 +35,7 @@ import com.android.volley.toolbox.ImageRequest;
 
 
 public class CordinatesFinderChurches {
-    public boolean findedForArtGalleriess=false;
+    public boolean findedForChurches=false;
     private void SearchText(TextView resultView) {
         new Handler(Looper.getMainLooper()).post(() -> resultView.setText("Searching for churches..."));
     }
@@ -122,7 +122,7 @@ public class CordinatesFinderChurches {
 
 
                     if (pendingRequests.decrementAndGet() == 0) {
-                        if (!findedForArtGalleriess) {
+                        if (!findedForChurches) {
                             updateResultView(resultView, "No churches found within the radius");
                         } else {
                             updateResultView(resultView, "Filtered Results:");
@@ -146,12 +146,14 @@ public class CordinatesFinderChurches {
         }
         return true;
     }
-    private void addPlaceToContainer(JSONObject place, LinearLayout container, String apiKey,String distanceText,int radius,double userLat, double userLng, double destLat, double destLng) {
+    private void addPlaceToContainer(JSONObject place, LinearLayout container, String apiKey, String distanceText, int radius, double userLat, double userLng, double destLat, double destLng) {
         try {
-            if(radius>=Float.parseFloat(distanceText.substring(0, distanceText.length() - 2)) && nameChecker(place.getString("name"))){
+            if (radius >= Float.parseFloat(distanceText.substring(0, distanceText.length() - 2)) && nameChecker(place.getString("name"))) {
                 String name = place.getString("name");
                 String photoUrl = getPhotoUrl(place, apiKey);
-                findedForArtGalleriess =true;
+                findedForChurches = true;
+
+                // Create the button layout
                 LinearLayout buttonLayout = new LinearLayout(container.getContext());
                 buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
                 buttonLayout.setBackgroundResource(android.R.drawable.btn_default);
@@ -159,14 +161,20 @@ public class CordinatesFinderChurches {
                 buttonLayout.setClickable(true);
                 buttonLayout.setFocusable(true);
 
-
+                // Create the ImageView with rounded corners
                 ImageView imageView = new ImageView(container.getContext());
-                int imageSize = 150;
+                int imageSize = 200; // Increase the image size
                 LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(imageSize, imageSize);
+                imageParams.setMargins(0, 0, 100, 0); // Add margin to the right of the image
                 imageView.setLayoutParams(imageParams);
+                imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 imageView.setImageResource(R.drawable.download);
 
+                // Set rounded corners
+                imageView.setBackgroundResource(R.drawable.rounded_corners);
+                imageView.setClipToOutline(true);
 
+                // Load the image from the URL if available
                 if (photoUrl != null) {
                     RequestQueue queue = Volley.newRequestQueue(container.getContext());
                     ImageRequest imageRequest = new ImageRequest(photoUrl,
@@ -175,28 +183,30 @@ public class CordinatesFinderChurches {
                             error -> Log.e("ImageLoadError", "Error loading image: " + error.getMessage()));
                     queue.add(imageRequest);
                 }
+
+                // Create the text container
                 LinearLayout textContainer = new LinearLayout(container.getContext());
                 textContainer.setOrientation(LinearLayout.VERTICAL);
 
-
+                // Create the name TextView with custom font
                 TextView textView = new TextView(container.getContext());
                 textView.setText(name);
                 textView.setTextSize(16);
 
-
+                // Create the distance TextView with custom font
                 TextView distanceView = new TextView(container.getContext());
                 distanceView.setText("Distance: " + distanceText);
                 distanceView.setTextSize(14);
 
-
+                // Add TextViews to the text container
                 textContainer.addView(textView);
                 textContainer.addView(distanceView);
 
-
+                // Add ImageView and text container to the button layout
                 buttonLayout.addView(imageView);
                 buttonLayout.addView(textContainer);
 
-
+                // Set the onClickListener for the button layout
                 buttonLayout.setOnClickListener(v -> {
                     Intent intent = new Intent(container.getContext(), MapActivity.class);
                     intent.putExtra("userLat", userLat);
@@ -205,6 +215,8 @@ public class CordinatesFinderChurches {
                     intent.putExtra("destLng", destLng);
                     container.getContext().startActivity(intent);
                 });
+
+                // Add the button layout to the container
                 container.addView(buttonLayout);
             }
         } catch (JSONException e) {

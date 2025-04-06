@@ -4,8 +4,10 @@ package com.example.anew;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
+import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -17,6 +19,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -36,6 +39,10 @@ public class ProfileActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window window = getWindow();
+            window.setStatusBarColor(ContextCompat.getColor(this, R.color.your_color));
+        }
         setContentView(R.layout.activity_profile);
 
 
@@ -96,7 +103,7 @@ public class ProfileActivity extends AppCompatActivity {
         );
 
 
-        Button logoutButton = findViewById(R.id.btn_logout);
+        ImageButton logoutButton = findViewById(R.id.btn_logout);
         logoutButton.setOnClickListener(v -> showLogoutConfirmationDialog());
     }
 

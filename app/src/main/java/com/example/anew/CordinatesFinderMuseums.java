@@ -3,7 +3,6 @@ package com.example.anew;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -21,14 +20,11 @@ import org.json.JSONObject;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import android.graphics.drawable.BitmapDrawable;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import com.android.volley.toolbox.ImageRequest;
 
 public class CordinatesFinderMuseums {
-    public boolean findedForArtGalleriess=false;
+    public boolean findedForMuseums=false;
     private void SearchText(TextView resultView) {
         new Handler(Looper.getMainLooper()).post(() -> resultView.setText("Searching for museums..."));
     }
@@ -104,7 +100,7 @@ public class CordinatesFinderMuseums {
                     }
 
                     if (pendingRequests.decrementAndGet() == 0) {
-                        if (!findedForArtGalleriess) {
+                        if (!findedForMuseums) {
                             updateResultView(resultView, "No museums found within the radius");
                         } else {
                             updateResultView(resultView, "Filtered Results:");
@@ -126,12 +122,14 @@ public class CordinatesFinderMuseums {
         }
         return true;
     }
-    private void addPlaceToContainer(JSONObject place, LinearLayout container, String apiKey,String distanceText,int radius,double userLat, double userLng, double destLat, double destLng) {
+    private void addPlaceToContainer(JSONObject place, LinearLayout container, String apiKey, String distanceText, int radius, double userLat, double userLng, double destLat, double destLng) {
         try {
-            if(radius>=Float.parseFloat(distanceText.substring(0, distanceText.length() - 2)) && nameChecker(place.getString("name"))){
+            if (radius >= Float.parseFloat(distanceText.substring(0, distanceText.length() - 2)) && nameChecker(place.getString("name"))) {
                 String name = place.getString("name");
                 String photoUrl = getPhotoUrl(place, apiKey);
-                findedForArtGalleriess =true;
+                findedForMuseums = true;
+
+                // Create the button layout
                 LinearLayout buttonLayout = new LinearLayout(container.getContext());
                 buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
                 buttonLayout.setBackgroundResource(android.R.drawable.btn_default);
@@ -139,12 +137,20 @@ public class CordinatesFinderMuseums {
                 buttonLayout.setClickable(true);
                 buttonLayout.setFocusable(true);
 
+                // Create the ImageView with rounded corners
                 ImageView imageView = new ImageView(container.getContext());
-                int imageSize = 150;
+                int imageSize = 200; // Increase the image size
                 LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(imageSize, imageSize);
+                imageParams.setMargins(0, 0, 100, 0); // Add margin to the right of the image
                 imageView.setLayoutParams(imageParams);
+                imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 imageView.setImageResource(R.drawable.download);
 
+                // Set rounded corners
+                imageView.setBackgroundResource(R.drawable.rounded_corners);
+                imageView.setClipToOutline(true);
+
+                // Load the image from the URL if available
                 if (photoUrl != null) {
                     RequestQueue queue = Volley.newRequestQueue(container.getContext());
                     ImageRequest imageRequest = new ImageRequest(photoUrl,
@@ -153,23 +159,30 @@ public class CordinatesFinderMuseums {
                             error -> Log.e("ImageLoadError", "Error loading image: " + error.getMessage()));
                     queue.add(imageRequest);
                 }
+
+                // Create the text container
                 LinearLayout textContainer = new LinearLayout(container.getContext());
                 textContainer.setOrientation(LinearLayout.VERTICAL);
 
+                // Create the name TextView with custom font
                 TextView textView = new TextView(container.getContext());
                 textView.setText(name);
                 textView.setTextSize(16);
 
+                // Create the distance TextView with custom font
                 TextView distanceView = new TextView(container.getContext());
                 distanceView.setText("Distance: " + distanceText);
                 distanceView.setTextSize(14);
 
+                // Add TextViews to the text container
                 textContainer.addView(textView);
                 textContainer.addView(distanceView);
 
+                // Add ImageView and text container to the button layout
                 buttonLayout.addView(imageView);
                 buttonLayout.addView(textContainer);
 
+                // Set the onClickListener for the button layout
                 buttonLayout.setOnClickListener(v -> {
                     Intent intent = new Intent(container.getContext(), MapActivity.class);
                     intent.putExtra("userLat", userLat);
@@ -178,6 +191,8 @@ public class CordinatesFinderMuseums {
                     intent.putExtra("destLng", destLng);
                     container.getContext().startActivity(intent);
                 });
+
+                // Add the button layout to the container
                 container.addView(buttonLayout);
             }
         } catch (JSONException e) {

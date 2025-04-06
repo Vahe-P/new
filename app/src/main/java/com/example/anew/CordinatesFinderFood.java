@@ -5,9 +5,12 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.Gravity;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import androidx.core.content.res.ResourcesCompat;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -124,25 +127,43 @@ public class CordinatesFinderFood {
         }
         return true;
     }
-    private void addPlaceToContainer(JSONObject place, LinearLayout container, String apiKey,String distanceText,int radius,double userLat, double userLng, double destLat, double destLng) {
+    private void addPlaceToContainer(JSONObject place, LinearLayout container, String apiKey, String distanceText, int radius, double userLat, double userLng, double destLat, double destLng) {
         try {
+
             String photoUrl = getPhotoUrl(place, apiKey);
-            if(radius>=Float.parseFloat(distanceText.substring(0, distanceText.length() - 2)) && nameChecker(place.getString("name"),photoUrl)){
+            if (radius >= Float.parseFloat(distanceText.substring(0, distanceText.length() - 2)) && nameChecker(place.getString("name"),photoUrl)) {
                 String name = place.getString("name");
-                findedForFastFoods =true;
+                findedForFastFoods = true;
+
+                // Create the button layout
                 LinearLayout buttonLayout = new LinearLayout(container.getContext());
-                buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
+                buttonLayout.setOrientation(LinearLayout.VERTICAL);
                 buttonLayout.setBackgroundResource(android.R.drawable.btn_default);
                 buttonLayout.setPadding(16, 16, 16, 16);
                 buttonLayout.setClickable(true);
                 buttonLayout.setFocusable(true);
 
+                // Set the size of the button
+                int buttonWidth = 400;
+                int buttonHeight = 500;
+                LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(buttonWidth, buttonHeight);
+                buttonParams.setMargins(0, 0, 16, 0); // Add margin to the right of the button
+                buttonLayout.setLayoutParams(buttonParams);
+
+                // Create the ImageView with rounded corners
                 ImageView imageView = new ImageView(container.getContext());
-                int imageSize = 150;
+                int imageSize = 300; // Set the image size
                 LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(imageSize, imageSize);
+                imageParams.gravity = Gravity.CENTER_HORIZONTAL;
                 imageView.setLayoutParams(imageParams);
+                imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 imageView.setImageResource(R.drawable.download);
 
+                // Set rounded corners
+                imageView.setBackgroundResource(R.drawable.rounded_corners);
+                imageView.setClipToOutline(true);
+
+                // Load the image from the URL if available
                 if (photoUrl != null) {
                     RequestQueue queue = Volley.newRequestQueue(container.getContext());
                     ImageRequest imageRequest = new ImageRequest(photoUrl,
@@ -151,23 +172,26 @@ public class CordinatesFinderFood {
                             error -> Log.e("ImageLoadError", "Error loading image: " + error.getMessage()));
                     queue.add(imageRequest);
                 }
-                LinearLayout textContainer = new LinearLayout(container.getContext());
-                textContainer.setOrientation(LinearLayout.VERTICAL);
 
+                // Create the TextViews for name and distance
                 TextView textView = new TextView(container.getContext());
                 textView.setText(name);
-                textView.setTextSize(16);
+                textView.setTextSize(16);// Set custom font
+                textView.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM);
+                textView.setPadding(0, 8, 0, 0); // Add padding to the top of the text
 
                 TextView distanceView = new TextView(container.getContext());
                 distanceView.setText("Distance: " + distanceText);
                 distanceView.setTextSize(14);
+                distanceView.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM);
+                distanceView.setPadding(0, 4, 0, 16); // Add padding to the top and bottom of the text
 
-                textContainer.addView(textView);
-                textContainer.addView(distanceView);
-
+                // Add ImageView and TextViews to the button layout
                 buttonLayout.addView(imageView);
-                buttonLayout.addView(textContainer);
+                buttonLayout.addView(textView);
+                buttonLayout.addView(distanceView);
 
+                // Set the onClickListener for the button layout
                 buttonLayout.setOnClickListener(v -> {
                     Intent intent = new Intent(container.getContext(), MapActivity.class);
                     intent.putExtra("userLat", userLat);
@@ -177,6 +201,7 @@ public class CordinatesFinderFood {
                     container.getContext().startActivity(intent);
                 });
 
+                // Add the button layout to the container
                 container.addView(buttonLayout);
             }
         } catch (JSONException e) {

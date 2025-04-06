@@ -1,71 +1,86 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp"
-    android:gravity="center_vertical"
     android:windowSoftInputMode="adjustResize">
 
-    <EditText
-        android:id="@+id/email_login"
+    <ImageView
+        android:id="@+id/backgroundImage"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Email"
-        android:inputType="textEmailAddress"
-        android:layout_marginBottom="12dp"
-        android:contentDescription="Enter your email address" />
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:src="@drawable/wnderimage"
+        android:alpha="0.5" />
 
-    <EditText
-        android:id="@+id/password_login"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Password"
-        android:inputType="textPassword"
-        android:layout_marginBottom="16dp"
-        android:contentDescription="Enter your password" />
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:gravity="center_vertical">
 
-    <Button
-        android:id="@+id/btn_login"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Login"
-        android:layout_marginBottom="12dp"
-        android:backgroundTint="@color/login_button"/>
-    <Button
-        android:id="@+id/guest_mode_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Guest Mode"
-        android:layout_marginBottom="12dp"
-        android:backgroundTint="@color/login_button"/>
+        <EditText
+            android:id="@+id/email_login"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Email"
+            android:inputType="textEmailAddress"
+            android:layout_marginBottom="12dp"
+            android:contentDescription="Enter your email address" />
 
+        <EditText
+            android:id="@+id/password_login"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Password"
+            android:inputType="textPassword"
+            android:layout_marginBottom="16dp"
+            android:contentDescription="Enter your password" />
 
-    <TextView
-        android:id="@+id/register_redirect"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="Don't have an account? Sign Up"
-        android:textColor="#3262a8"
-        android:layout_marginBottom="12dp"
-        android:clickable="true"
-        android:focusable="true" />
+        <Button
+            android:id="@+id/btn_login"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Login"
+            android:layout_marginBottom="12dp"
+            android:backgroundTint="@color/your_color" />
 
-    <TextView
-        android:id="@+id/forgotPassword"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Forgot your password?"
-        android:gravity="center"
-        android:layout_gravity="center_horizontal"
-        android:textColor="#3262a8"
-        android:clickable="true"
-        android:focusable="true"/>
+        <Button
+            android:id="@+id/guest_mode_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Guest Mode"
+            android:layout_marginBottom="12dp"
+            android:backgroundTint="@color/your_color" />
 
-    <ProgressBar
-        android:id="@+id/login_progress"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        android:layout_gravity="center" />
-</LinearLayout>
+        <TextView
+            android:id="@+id/register_redirect"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Don't have an account? Sign Up"
+            android:textColor="#3262a8"
+            android:layout_marginBottom="12dp"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <TextView
+            android:id="@+id/forgotPassword"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Forgot your password?"
+            android:gravity="center"
+            android:layout_gravity="center_horizontal"
+            android:textColor="#3262a8"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <ProgressBar
+            android:id="@+id/login_progress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:layout_gravity="center" />
+
+    </LinearLayout>
+
+</FrameLayout>

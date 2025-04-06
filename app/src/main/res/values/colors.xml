@@ -5,4 +5,10 @@
     <color name="b_color">#FFFFFFFF</color>
     <color name="main_color">#2A53C8</color>
     <color name="login_button">#3262a8</color>
+    <color name="primaryColor">#4285F4</color>
+    <color name="accentColor">#FF6D00</color>
+    <color name="backgroundColor">#FAFAFA</color>
+    <color name="my_checkbox_color">#45658A</color>
+
+    <color name="your_color">#45658A</color>
 </resources>
