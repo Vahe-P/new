@@ -9,7 +9,6 @@ import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.GridLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -32,8 +31,6 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import android.graphics.drawable.BitmapDrawable;
-import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.core.content.res.ResourcesCompat;
@@ -44,18 +41,18 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-public class CordinatesFinderArtGalleries {
-    public boolean findedForArtGalleriess = false;
+public class CoordinatesFinderOther {
+
     private void SearchText(TextView resultView) {
-        new Handler(Looper.getMainLooper()).post(() -> resultView.setText("Searching for galleries..."));
+        new Handler(Looper.getMainLooper()).post(() -> resultView.setText(""));
     }
 
-    public void getArtGalleryCoordinates(double userLat, double userLng, int radius, String apiKey, TextView resultView, GridLayout resultsContainer) {
+    public void getCoordinates(double userLat, double userLng, int radius, String apiKey, TextView resultView, GridLayout resultsContainer,String category) {
         SearchText(resultView);
         String url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" +
                 userLat + "," + userLng +
                 "&radius=" + radius * 1000 + // radius in meters
-                "&keyword=art_gallery art_museum" +
+                "&keyword="+category +
                 "&key=" + apiKey;
 
         RequestQueue queue = Volley.newRequestQueue(resultView.getContext());
@@ -83,9 +80,7 @@ public class CordinatesFinderArtGalleries {
                             }
 
                             // Fetch street distances for all places in a single request
-                            getStreetDistances(userLat, userLng, destinations.toString(), radius, apiKey, coordinates, results, resultView, pendingRequests, resultsContainer);
-                        } else {
-                            updateResultView(resultView, "No art galleries found within the radius.");
+                            getStreetDistances(userLat, userLng, destinations.toString(), radius, apiKey, coordinates, results, resultView, pendingRequests, resultsContainer,category);
                         }
                     } catch (Exception e) {
                         updateResultView(resultView, "Error parsing the response.");
@@ -98,7 +93,7 @@ public class CordinatesFinderArtGalleries {
     }
 
     private void getStreetDistances(double userLat, double userLng, String destinations, int radius, String apiKey,
-                                    StringBuilder coordinates, JSONArray results, TextView resultView, AtomicInteger pendingRequests, GridLayout container) {
+                                    StringBuilder coordinates, JSONArray results, TextView resultView, AtomicInteger pendingRequests, GridLayout container,String category) {
         String distanceUrl = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=" +
                 userLat + "," + userLng +
                 "&destinations=" + destinations +
@@ -122,7 +117,7 @@ public class CordinatesFinderArtGalleries {
                                             .append(destinations.split("\\|")[i])
                                             .append(" (").append(distanceText).append(" via street)\n");
 
-                                    addPlaceToContainer(place, container, apiKey, distanceText, radius, userLat,  userLng,  place.getJSONObject("geometry").getJSONObject("location").getDouble("lat"), place.getJSONObject("geometry").getJSONObject("location").getDouble("lng"));
+                                    addPlaceToContainer(place, container, apiKey, distanceText, radius, userLat,  userLng,  place.getJSONObject("geometry").getJSONObject("location").getDouble("lat"), place.getJSONObject("geometry").getJSONObject("location").getDouble("lng"),category);
                                 } else {
                                     coordinates.append("Distance unavailable for: ").append(place.getString("name")).append("\n");
                                 }
@@ -132,13 +127,7 @@ public class CordinatesFinderArtGalleries {
                         Log.e("DistanceMatrixError", "Error parsing distance response: " + e.getMessage());
                     }
 
-                    if (pendingRequests.decrementAndGet() == 0) {
-                        if (!findedForArtGalleriess) {
-                            updateResultView(resultView, "No galleries found within the radius");
-                        } else {
-                            updateResultView(resultView, "Filtered Results:");
-                        }
-                    }
+
                 },
                 error -> Log.e("DistanceMatrixError", "Error fetching distance: " + error.getMessage())
         );
@@ -150,15 +139,14 @@ public class CordinatesFinderArtGalleries {
         new Handler(Looper.getMainLooper()).post(() -> resultView.setText(text));
     }
     private boolean nameChecker(String name){
-        if(name.contains("Studio")){
+        if(name.contains("VNS")||name.contains("Ando")){
             return false;
         }
         return true;
     }
-    private void addPlaceToContainer(JSONObject place, GridLayout container, String apiKey, String distanceText, int radius, double userLat, double userLng, double destLat, double destLng) {
+    private void addPlaceToContainer(JSONObject place, GridLayout container, String apiKey, String distanceText, int radius, double userLat, double userLng, double destLat, double destLng,String category) {
 
         try {
-            // Array of drawable resource IDs
             int[] drawableIds = {
                     R.drawable.images,
                     R.drawable.bg,
@@ -196,7 +184,6 @@ public class CordinatesFinderArtGalleries {
             if (radius >= Float.parseFloat(distanceText.substring(0, distanceText.length() - 2)) && nameChecker(place.getString("name"))) {
                 String name = place.getString("name");
                 String photoUrl = getPhotoUrl(place, apiKey);
-                findedForArtGalleriess = true;
 
                 // Create the button layout
                 LinearLayout buttonLayout = new LinearLayout(container.getContext());
@@ -258,9 +245,10 @@ public class CordinatesFinderArtGalleries {
                 distanceView.setText("Distance: " + distanceText);
                 distanceView.setTextSize(14);
                 distanceView.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM);
-                distanceView.setPadding(0, 4, 0, 16); // Add padding to the top and bottom of the text
+                distanceView.setPadding(0, 4, 0, 16);// Add padding to the top and bottom of the text
+
                 TextView categoryView=new TextView(container.getContext());
-                categoryView.setText("Art Gallery");
+                categoryView.setText(category);
                 categoryView.setGravity(Gravity.LEFT | Gravity.BOTTOM);
                 categoryView.setPadding(0, 8, 0, 0);
                 categoryView.setTextSize(12);

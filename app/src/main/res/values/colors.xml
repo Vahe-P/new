@@ -11,4 +11,6 @@
     <color name="my_checkbox_color">#45658A</color>
 
     <color name="your_color">#45658A</color>
+    <color name="unabled_button_color">#5534383E</color>
+
 </resources>

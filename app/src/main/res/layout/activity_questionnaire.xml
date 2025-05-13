@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="0dp">
+
+    <!-- Background Image -->
+    <ImageView
+        android:id="@+id/backgroundImage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:src="@drawable/bg"
+        android:alpha="0.5" />
+
+    <!-- Centered Question and Checkboxes -->
+    <LinearLayout
+        android:id="@+id/questionnaireContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/questionText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="What kind of recommendation would you like to have?"
+            android:textSize="24sp"
+            android:lineSpacingExtra="6dp"
+            android:textAlignment="center"
+            android:gravity="center"
+            android:layout_marginBottom="16dp"
+            android:textColor="@color/black" />
+
+        <!-- Checkboxes -->
+        <CheckBox
+            android:id="@+id/church"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Churches    "
+            android:buttonTint="@color/your_color"
+            android:layout_marginTop="8dp" />
+
+        <CheckBox
+            android:id="@+id/hotels"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hotels         "
+            android:buttonTint="@color/your_color"
+            android:layout_marginTop="8dp" />
+
+        <CheckBox
+            android:id="@+id/parks"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Parks          "
+            android:buttonTint="@color/your_color"
+            android:layout_marginTop="8dp" />
+
+        <CheckBox
+            android:id="@+id/museums"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Museums   "
+            android:buttonTint="@color/your_color"
+            android:layout_marginTop="8dp" />
+
+        <CheckBox
+            android:id="@+id/mountains"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Mountains  "
+            android:buttonTint="@color/your_color"
+            android:layout_marginTop="8dp" />
+
+        <CheckBox
+            android:id="@+id/lib"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Libraries    "
+            android:buttonTint="@color/your_color"
+            android:layout_marginTop="8dp" />
+    </LinearLayout>
+
+    <!-- Submit Button at Bottom -->
+    <Button
+        android:id="@+id/submitButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Submit"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginBottom="16dp"
+        android:backgroundTint="@color/your_color" />
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -8,6 +8,7 @@
     android:background="#ffffff">
 
 
+
     <!-- User Info Section -->
     <LinearLayout
         android:orientation="vertical"
@@ -74,6 +75,14 @@
             android:spinnerMode="dropdown"
             android:padding="8dp" />
     </LinearLayout>
+    <Switch
+        android:id="@+id/darkModeSwitch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Dark Mode"
+        android:layout_below="@id/preferencesButton"
+        android:layout_marginTop="20dp"
+        android:layout_centerHorizontal="true" />
 
 
 
@@ -92,6 +101,71 @@
         android:scaleType="fitCenter"
         android:adjustViewBounds="true"
         android:padding="4dp"/>
+    <!-- Add or Change Preferences Button -->
+    <Button
+        android:id="@+id/preferencesButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Add / Change Preferences"
+        android:layout_below="@id/searchBar"
+        android:layout_marginTop="50dp"
+        android:layout_centerHorizontal="true"
+        android:textColor="#FFFFFF"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:layout_marginBottom="10dp"
+        android:backgroundTint="@color/your_color"
+        />
+    <LinearLayout
+        android:id="@+id/mainContent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/darkModeSwitch"
+        android:orientation="vertical"
+        android:layout_above="@id/bottomButtons">
+
+
+
+        <com.example.anew.CustomSwipeRefreshLayout
+
+        android:id="@+id/swipeRefreshLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <com.example.anew.InertialScrollView
+                android:id="@+id/inertialScrollView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fillViewport="true">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/text_location"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Favorites"
+                        android:textColor="#000000"
+                        android:layout_marginBottom="8dp" />
+
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/resultsRecyclerView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+            </com.example.anew.InertialScrollView>
+
+        </com.example.anew.CustomSwipeRefreshLayout>
+
+
+    </LinearLayout>
 
 
 
@@ -129,6 +203,7 @@
             android:scaleType="centerInside"
             android:src="@android:drawable/ic_menu_myplaces" />
     </LinearLayout>
+
 
 
 </RelativeLayout>

@@ -54,6 +54,7 @@ public class RegisterActivity extends AppCompatActivity {
             } else {
                 registerUser(email, password);
             }
+            startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
         });
 
 

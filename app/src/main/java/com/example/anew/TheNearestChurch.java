@@ -1,8 +1,19 @@
 package com.example.anew;
 
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.TextUtils;
+import android.view.Gravity;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.GridLayout;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.util.Log;
 
@@ -12,30 +23,43 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Random;
+
+import android.graphics.drawable.BitmapDrawable;
+import android.widget.Toast;
+
+import androidx.core.content.res.ResourcesCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.android.volley.toolbox.ImageRequest;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 
-public class CordinatesFinderChurches {
+public class TheNearestChurch {
     public boolean findedForChurches = false;
 
     private void SearchText(TextView resultView) {
         new Handler(Looper.getMainLooper()).post(() -> resultView.setText("Searching for churches..."));
 
     }
-
     private List<Place_2> allResults = new ArrayList<>();
 
 
-    public void getChurchCoordinates(String category, double userLat, double userLng, int radius, String apiKey, TextView resultView, RecyclerView resultsContainer) {
+    public void getChurchCoordinates(String category, double userLat, double userLng,  String apiKey, TextView resultView, RecyclerView resultsContainer) {
         SearchText(resultView);
         String url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" +
                 userLat + "," + userLng +
-                "&radius=" + radius * 1000 + // radius in meters
+                "&rankby=distance" + // radius in meters
                 "&keyword=" + category +
                 "&key=" + apiKey;
 
@@ -63,7 +87,7 @@ public class CordinatesFinderChurches {
                                 Log.e("AAJN", "Processing " + category + ": " + place.getString("name"));
                             }
 
-                            getStreetDistances(resultView.getContext(), userLat, userLng, destinations.toString(), apiKey, coordinates, results, resultView, resultsContainer, radius, category.replace("+", " "));
+                            getStreetDistances(resultView.getContext(), userLat, userLng, destinations.toString(), apiKey, coordinates, results, resultView, resultsContainer, category);
                         } else {
                             updateResultView(resultView, "No results found for " + category + " within the radius.");
                         }
@@ -78,7 +102,7 @@ public class CordinatesFinderChurches {
     }
 
     private void getStreetDistances(Context context, double userLat, double userLng, String destinations, String apiKey,
-                                    StringBuilder coordinates, JSONArray results, TextView resultView, RecyclerView container, int radius, String category) {
+                                    StringBuilder coordinates, JSONArray results, TextView resultView, RecyclerView container, String category) {
         String distanceUrl = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=" +
                 userLat + "," + userLng +
                 "&destinations=" + destinations +
@@ -114,9 +138,9 @@ public class CordinatesFinderChurches {
                                     String numericPart = distanceText.split(" ")[0];
                                     float distanceInKm = Float.parseFloat(numericPart);
 
-                                    if (nameChecker(name) && distanceInKm <= radius) {
-                                        places.add(new Place_2(name, photoUrl, lat, lng, distanceText, category));
-                                    }
+                                    places.add(new Place_2(name, photoUrl, lat, lng, distanceText, category));
+                                    break;
+
                                 } else {
                                     coordinates.append("Distance unavailable for: ").append(place.getString("name")).append("\n");
                                 }
@@ -144,7 +168,7 @@ public class CordinatesFinderChurches {
     }
 
     private boolean nameChecker(String name) {
-        return !name.contains("Studio") && !name.contains("Ando") && !name.contains("Fine") && !name.contains("Dili") && !name.contains("Parcheggio") && !name.contains("Anglicana")&& !name.contains("Nativity");
+        return !name.contains("Studio") && !name.contains("Ando") && !name.contains("Dili") && !name.contains("Parcheggio") && !name.contains("Anglicana")&& !name.contains("Nativity");
     }
 
 

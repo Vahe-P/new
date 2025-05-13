@@ -6,8 +6,11 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
+        android:name=".MyApp"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -18,9 +21,14 @@
         android:theme="@style/Theme.New"
         tools:targetApi="31">
         <activity
-            android:name=".CordinatesFinderFood"
+            android:name=".PlaceAdapter_2"
             android:exported="false" />
-        <!-- Main Activity -->
+        <activity
+            android:name=".PlaceAdapter"
+            android:exported="false" />
+        <activity
+            android:name=".QuestionnaireActivity"
+            android:exported="false" /> <!-- Main Activity -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -38,17 +46,26 @@
             android:exported="true" /> <!-- Register Activity -->
         <activity
             android:name=".RegisterActivity"
-            android:exported="true" />
+            android:exported="true" /> <!-- Map Activity -->
         <activity
-            android:name=".Map"
-            android:exported="true" />
+            android:name=".KartaActivity"
+            android:exported="true" /> <!-- MapActivity -->
         <activity
             android:name=".MapActivity"
             android:exported="true" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyDfylRP2UhEe-kcDiigAiECbCqL1HAJ3I4" />
+            android:value="AIzaSyD3aOclf9YRAKK9D0VfQPp0NLsGDCJ9xFU" />
+
+        <receiver
+            android:name=".BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

@@ -19,6 +19,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
@@ -67,7 +68,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
 
         // Add markers for start and destination
         mMap.addMarker(new MarkerOptions().position(startLocation).title("Start"));
-        mMap.addMarker(new MarkerOptions().position(endLocation).title("Destination"));
+        mMap.addMarker(new MarkerOptions().position(endLocation).title("Destination").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
 
         // Move camera to start location with a suitable zoom level
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(startLocation, 10));
@@ -122,7 +123,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
 
                 // Add start and end markers again
                 mMap.addMarker(new MarkerOptions().position(startLocation).title("Start"));
-                mMap.addMarker(new MarkerOptions().position(endLocation).title("Destination"));
+                //mMap.addMarker(new MarkerOptions().position(endLocation).title("Destination").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
 
                 // Draw the polyline on the map
                 PolylineOptions polylineOptions = new PolylineOptions()
