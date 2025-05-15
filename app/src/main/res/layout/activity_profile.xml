@@ -1,209 +1,311 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="0dp"
-    android:background="#ffffff">
+    android:background="#F5F5F5">
 
-
-
-    <!-- User Info Section -->
-    <LinearLayout
-        android:orientation="vertical"
+    <!-- Top App Bar -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/topBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:gravity="center_horizontal"
-        android:id="@+id/userEmailTextViewLayout"
-        android:layout_marginBottom="20dp">
+        app:cardElevation="4dp"
+        app:cardCornerRadius="0dp"
+        app:cardBackgroundColor="@color/your_color">
 
-
-
-
-        <TextView
-            android:id="@+id/userEmailTextView"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="user@example.com"
-            android:textSize="16sp"
-            android:textColor="#666666"
-            android:layout_marginTop="10dp"/>
-    </LinearLayout>
-    <EditText
-        android:id="@+id/searchBar"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Profile"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/roboto_condensed_black"/>
+
+            <ImageButton
+                android:id="@+id/btn_logout"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/logoutdoor"
+                android:background="?attr/selectableItemBackgroundBorderless"
+
+                android:layout_alignParentTop="true"
+                android:layout_alignParentEnd="true"
+                android:scaleType="fitCenter"
+                android:adjustViewBounds="true"
+                android:padding="4dp"/>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- User Info Card -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/userInfoCard"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:layout_below="@id/userEmailTextViewLayout"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/topBar"
         android:layout_margin="16dp"
-        android:hint="Enter distance(default 5)"
-        android:padding="12dp"
-        android:background="@android:drawable/edit_text"
-        android:inputType="number"
-        android:maxLength="4"
-        android:textSize="16sp" />
+        app:cardCornerRadius="8dp"
+        app:cardElevation="2dp">
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
 
+            <TextView
+                android:id="@+id/userEmailTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="user@example.com"
+                android:textSize="16sp"
+                android:textColor="#333333"
+                android:fontFamily="@font/roboto_condensed_black"/>
 
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="Search Radius (km)"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
-    <!-- Choosing Bars Section -->
-    <LinearLayout
-        android:id="@+id/choosingBars"
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/searchBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:maxLength="4"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Starting Point"
+                android:textSize="16sp"
+                android:textColor="#666666"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp"/>
+
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/toggleGroup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                app:singleSelection="true"
+                app:selectionRequired="true">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnFromMyPlace"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="From my place"
+                    android:textColor="#FFFFFF"
+                    app:cornerRadius="8dp"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnChooseInMap"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Choose in map"
+                    android:textColor="#FFFFFF"
+                    app:cornerRadius="8dp"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+
+            </com.google.android.material.button.MaterialButtonToggleGroup>
+
+            <!-- Container for Account Management and Bell Button -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp">
+
+                <LinearLayout
+                    android:id="@+id/accountManagementButtonsContainer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:layout_toStartOf="@+id/notificationButton"
+                    android:visibility="gone"> <!-- Initially GONE -->
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/changePasswordButton"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Change Password"
+                        android:textAllCaps="false"
+                        android:textColor="@color/your_color"
+                        android:minWidth="0dp"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"/>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/deleteAccountButton"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Delete Account"
+                        android:textAllCaps="false"
+                        android:textColor="#FF0000" 
+                        android:minWidth="0dp"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:layout_marginStart="8dp"/>
+                </LinearLayout>
+
+                <ImageButton
+                    android:id="@+id/notificationButton"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/baseline_notifications_24"
+                    android:contentDescription="Notifications"/>
+            </RelativeLayout>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- Preferences Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/preferencesButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
-        android:layout_marginTop="72dp"
-
-
-
-
-        android:layout_below="@id/userEmailTextViewLayout"
-        android:orientation="horizontal"
-        android:gravity="center">
-
-
-
-
-        <Spinner
-            android:id="@+id/fromWhere"
-            android:layout_width="0dp"
-            android:layout_height="50dp"
-            android:layout_weight="1"
-            android:background="@android:drawable/btn_dropdown"
-            android:spinnerMode="dropdown"
-            android:padding="8dp" />
-    </LinearLayout>
-    <Switch
-        android:id="@+id/darkModeSwitch"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Dark Mode"
-        android:layout_below="@id/preferencesButton"
-        android:layout_marginTop="20dp"
-        android:layout_centerHorizontal="true" />
-
-
-
-
-    <!-- Log Out Button -->
-    <ImageButton
-        android:id="@+id/btn_logout"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:src="@drawable/logoutdoor"
-        android:background="?attr/selectableItemBackgroundBorderless"
-
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        android:layout_margin="12dp"
-        android:scaleType="fitCenter"
-        android:adjustViewBounds="true"
-        android:padding="4dp"/>
-    <!-- Add or Change Preferences Button -->
-    <Button
-        android:id="@+id/preferencesButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_below="@id/userInfoCard"
+        android:layout_marginHorizontal="16dp"
         android:text="Add / Change Preferences"
-        android:layout_below="@id/searchBar"
-        android:layout_marginTop="50dp"
-        android:layout_centerHorizontal="true"
         android:textColor="#FFFFFF"
-        android:paddingLeft="20dp"
-        android:paddingRight="20dp"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp"
-        android:layout_marginBottom="10dp"
-        android:backgroundTint="@color/your_color"
-        />
+        android:padding="12dp"
+        app:cornerRadius="8dp"
+        android:backgroundTint="@color/your_color"/>
+
+    <!-- Main Content -->
     <LinearLayout
         android:id="@+id/mainContent"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/darkModeSwitch"
         android:orientation="vertical"
-        android:layout_above="@id/bottomButtons">
-
-
-
-        <com.example.anew.CustomSwipeRefreshLayout
-
-        android:id="@+id/swipeRefreshLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <com.example.anew.InertialScrollView
-                android:id="@+id/inertialScrollView"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:fillViewport="true">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:id="@+id/text_location"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Favorites"
-                        android:textColor="#000000"
-                        android:layout_marginBottom="8dp" />
-
-
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/resultsRecyclerView"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
-            </com.example.anew.InertialScrollView>
-
-        </com.example.anew.CustomSwipeRefreshLayout>
-
+        android:layout_below="@id/preferencesButton"
+        android:layout_above="@id/bottomButtons"
+        android:layout_marginTop="16dp"
+        android:padding="16dp">
 
     </LinearLayout>
 
-
-
-
-    <!-- Bottom Navigation Buttons -->
+    <!-- Sources Button and Version Number -->
     <LinearLayout
+        android:id="@+id/bottomInfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_above="@id/bottomButtons"
+        android:padding="16dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/helpCenterButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Help Center"
+            android:textColor="#FFFFFF"
+            android:padding="12dp"
+            android:layout_marginBottom="8dp"
+            app:cornerRadius="8dp"
+            android:backgroundTint="@color/your_color"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/feedbackButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Leave Feedback"
+            android:textColor="#FFFFFF"
+            android:padding="12dp"
+            android:layout_marginBottom="8dp"
+            app:cornerRadius="8dp"
+            android:backgroundTint="@color/your_color"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/sourcesButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Sources"
+            android:textColor="#FFFFFF"
+            android:padding="12dp"
+            app:cornerRadius="8dp"
+            android:backgroundTint="@color/your_color"/>
+
+        <TextView
+            android:id="@+id/versionText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Version 1.1.0"
+            android:textAlignment="center"
+            android:textColor="#666666"
+            android:textSize="14sp"
+            android:layout_marginTop="8dp"/>
+    </LinearLayout>
+
+    <!-- Bottom Navigation -->
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/bottomButtons"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:background="#DDDDDD"
-        android:padding="8dp">
+        app:cardElevation="8dp"
+        app:cardCornerRadius="0dp">
 
-
-        <ImageButton
-            android:id="@+id/discoverButton"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:id="@+id/bottomNavigation"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="?attr/selectableItemBackground"
-            android:contentDescription="Discover"
-            android:scaleType="centerInside"
-            android:src="@android:drawable/ic_menu_compass" />
+            android:layout_alignParentBottom="true"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:background="@color/white">
 
+            <ImageButton
+                android:id="@+id/profileButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:src="@drawable/baseline_person_24"
+                android:background="?android:attr/selectableItemBackground"
+                android:contentDescription="Profile"/>
 
-        <ImageButton
-            android:id="@+id/profileButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="?attr/selectableItemBackground"
-            android:contentDescription="Profile"
-            android:scaleType="centerInside"
-            android:src="@android:drawable/ic_menu_myplaces" />
-    </LinearLayout>
+            <ImageButton
+                android:id="@+id/discoverButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:src="@drawable/baseline_explore_24"
+                android:background="?android:attr/selectableItemBackground"
+                android:contentDescription="Discover"/>
 
-
+            <ImageButton
+                android:id="@+id/favoritesButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:src="@drawable/ic_star_filled"
+                android:background="?android:attr/selectableItemBackground"
+                android:contentDescription="Favorites"/>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
 </RelativeLayout>

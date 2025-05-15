@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -8,15 +7,15 @@
     android:background="#FFFFFF">
 
     <FrameLayout
+        android:id="@+id/frameLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/frameLayout">
+        android:layout_alignParentTop="true">
 
         <ImageView
             android:id="@+id/backgroundImage"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_alignParentTop="true"
             android:alpha="0.3"
             android:scaleType="fitXY"
             android:src="@drawable/image300x200" />
@@ -33,17 +32,19 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
-                android:fontFamily="@/custom_font"
+                android:fontFamily="@font/roboto_condensed_black"
                 android:text="What you would like to find?"
                 android:textColor="#FFFFFF"
                 android:textSize="24sp" />
         </RelativeLayout>
 
         <HorizontalScrollView
+            android:id="@+id/categoriesSection"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"
+            android:layout_marginTop="50dp"
             android:paddingLeft="8dp"
             android:paddingRight="8dp"
             android:clipToPadding="true"
@@ -53,13 +54,10 @@
                 android:id="@+id/choosingBars"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="50dp"
-
                 android:rowCount="2"
                 android:columnCount="6"
                 android:gravity="center_horizontal">
 
-                <!-- CheckBoxes -->
                 <CheckBox
                     android:id="@+id/checkChurches"
                     android:layout_width="wrap_content"
@@ -85,22 +83,16 @@
                     android:text="Parks" />
 
                 <CheckBox
-                    android:id="@+id/checkHotels"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Hotels" />
-
-                <CheckBox
                     android:id="@+id/checkLibraries"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Libraries" />
 
                 <CheckBox
-                    android:id="@+id/checkRestaurants"
+                    android:id="@+id/checkHotels"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Restaurants" />
+                    android:text="Hotels" />
 
                 <CheckBox
                     android:id="@+id/checkCinemas"
@@ -119,17 +111,25 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Theaters" />
+
+                <CheckBox
+                    android:id="@+id/checkRestaurants"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Restaurants" />
+
+                <CheckBox
+                    android:id="@+id/checkGas"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Gas" />
+
                 <CheckBox
                     android:id="@+id/checkFortress"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Fortress" />
 
-                <CheckBox
-                    android:id="@+id/checkGas"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Gas Stations" />
             </GridLayout>
         </HorizontalScrollView>
 
@@ -137,7 +137,6 @@
             android:id="@+id/searchButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
             android:layout_gravity="bottom"
             android:layout_marginTop="20dp"
             android:layout_marginLeft="16dp"
@@ -158,121 +157,98 @@
         android:textSize="18sp"
         android:fontFamily="sans-serif-medium" />
 
-    <LinearLayout
-        android:id="@+id/mainContent"
+    <!-- Main Content -->
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefreshLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/recommendedText"
-        android:orientation="vertical"
-        android:layout_above="@id/bottomButtons">
+        android:layout_above="@id/bottomNavigation">
 
-        <TextView
-            android:id="@+id/text_location"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_marginLeft="16dp"
-            android:background="#AAFFFFFF"
-            android:padding="8dp"
-            android:text="Coordinates will appear here"
-            android:textColor="#000000"
-            android:visibility="gone" />
-        <ImageView
-            android:id="@+id/errorImageView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/erfnd"
-            android:visibility="gone"
-            android:layout_gravity="center"/>
-
-        <ImageView
-            android:id="@+id/compassImage"
-            android:layout_width="300dp"
-            android:layout_height="300dp"
-            android:src="@drawable/compass_img"
-            android:visibility="gone"
-            android:clickable="true"
-            android:layout_gravity="center"/>
-        <Button
-            android:id="@+id/btn"
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:layout_gravity="bottom"
-            android:layout_marginTop="100dp"
-            android:visibility="gone"
-            android:layout_marginLeft="66dp"
-            android:layout_marginRight="66dp"
-            android:text="Change radious"
-            android:backgroundTint="@color/your_color" />
-        <ProgressBar
-            android:id="@+id/loadingSpinner"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:visibility="gone"
-            style="?android:attr/progressBarStyleLarge" />
+            android:layout_height="match_parent">
 
-        <com.example.anew.CustomSwipeRefreshLayout
-
-            android:id="@+id/swipeRefreshLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <com.example.anew.InertialScrollView
-                android:id="@+id/inertialScrollView"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/resultsRecyclerView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:fillViewport="true">
+                android:clipToPadding="false"
+                android:padding="16dp"/>
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+            <ProgressBar
+                android:id="@+id/loadingSpinner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:visibility="gone"/>
 
+            <ImageView
+                android:id="@+id/errorImageView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:src="@drawable/erfnd"
+                android:visibility="gone"/>
 
+            <Button
+                android:id="@+id/btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Change radius"
+                android:layout_gravity="center"
+                android:visibility="gone"
+                android:backgroundTint="@color/your_color"/>
 
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/resultsRecyclerView"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
-            </com.example.anew.InertialScrollView>
+            <ImageView
+                android:id="@+id/compassImage"
+                android:layout_width="300dp"
+                android:layout_height="300dp"
+                android:layout_gravity="center"
+                android:src="@drawable/compass_img"
+                android:visibility="gone"
+                android:clickable="true"/>
 
-        </com.example.anew.CustomSwipeRefreshLayout>
-    </LinearLayout>
+        </FrameLayout>
 
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <!-- Bottom Navigation -->
     <LinearLayout
-        android:id="@+id/bottomButtons"
+        android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:orientation="horizontal"
-        android:gravity="center"
-        android:background="#DDDDDD"
-        android:padding="8dp"
-        android:layout_marginLeft="0dp"
-        android:layout_marginRight="0dp">
-
-        <ImageButton
-            android:id="@+id/discoverButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="?attr/selectableItemBackground"
-            android:contentDescription="Discover"
-            android:scaleType="centerInside"
-            android:src="@android:drawable/ic_menu_compass" />
+        android:padding="16dp"
+        android:background="@color/white">
 
         <ImageButton
             android:id="@+id/profileButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="?attr/selectableItemBackground"
-            android:contentDescription="Profile"
-            android:scaleType="centerInside"
-            android:src="@android:drawable/ic_menu_myplaces" />
+            android:src="@drawable/baseline_person_24"
+            android:background="?android:attr/selectableItemBackground"
+            android:contentDescription="Profile"/>
+
+        <ImageButton
+            android:id="@+id/discoverButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:src="@drawable/baseline_explore_24"
+            android:background="?android:attr/selectableItemBackground"
+            android:contentDescription="Discover"/>
+
+        <ImageButton
+            android:id="@+id/favoritesButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:src="@drawable/ic_star_filled"
+            android:background="?android:attr/selectableItemBackground"
+            android:contentDescription="Favorites"/>
     </LinearLayout>
+
 </RelativeLayout>

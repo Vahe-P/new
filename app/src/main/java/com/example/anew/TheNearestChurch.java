@@ -148,8 +148,8 @@ public class TheNearestChurch {
 
                             // Add the results to the combined list and refresh the adapter
                             allResults.addAll(places);
-                            PlaceAdapter_2 adapter = new PlaceAdapter_2(context, allResults);
-                            container.setAdapter(adapter);
+                            //PlaceAdapter_2 adapter = new PlaceAdapter_2(context, allResults);
+                            //container.setAdapter(adapter);
                         }
                     } catch (JSONException e) {
                         Log.e("DistanceMatrixError", "Error parsing distance response: " + e.getMessage());

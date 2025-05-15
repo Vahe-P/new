@@ -43,10 +43,13 @@ public class PlaceAdapter_2 extends RecyclerView.Adapter<PlaceAdapter_2.ChurchVi
     private List<Place_2> churches;
     private Location userLocation;
     private FusedLocationProviderClient fusedLocationProviderClient;
-
-    public PlaceAdapter_2(Context context, List<Place_2> churches) {
+    private double userLng;
+    private double userLat;
+    public PlaceAdapter_2(Context context, List<Place_2> churches,double userLat,double userLng) {
         this.context = context;
         this.churches = churches;
+        this.userLat=userLat;
+        this.userLng=userLng;
 
         this.fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context);
 
@@ -186,8 +189,8 @@ public class PlaceAdapter_2 extends RecyclerView.Adapter<PlaceAdapter_2.ChurchVi
         // OnClickListener to open MapActivity
         holder.containerLayout.setOnClickListener(v -> {
             Intent intent = new Intent(context, MapActivity.class);
-            intent.putExtra("userLat", userLocation.getLatitude()); // User's current latitude
-            intent.putExtra("userLng", userLocation.getLongitude());
+            intent.putExtra("userLat", userLat); // User's current latitude
+            intent.putExtra("userLng", userLng);
             intent.putExtra("destLat", church.getLat());
             intent.putExtra("destLng", church.getLng());
             context.startActivity(intent);

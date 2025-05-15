@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <color name="primary_color">#4A90E2</color>
+    <color name="primary_dark">#357ABD</color>
+    <color name="accent_color">#FF4081</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="gray">#757575</color>
+    <color name="light_gray">#EEEEEE</color>
     <color name="b_color">#FFFFFFFF</color>
     <color name="main_color">#2A53C8</color>
     <color name="login_button">#3262a8</color>

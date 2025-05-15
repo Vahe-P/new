@@ -16,6 +16,7 @@ public class CustomSwipeRefreshLayout extends SwipeRefreshLayout {
     private View scrollView;
     private boolean isDragging;
     private float initialMotionY;
+    private boolean isRefreshing;
 
     public CustomSwipeRefreshLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -28,6 +29,10 @@ public class CustomSwipeRefreshLayout extends SwipeRefreshLayout {
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent event) {
+        if (isRefreshing) {
+            return false;
+        }
+
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 startX = event.getX();
@@ -70,5 +75,11 @@ public class CustomSwipeRefreshLayout extends SwipeRefreshLayout {
             return scrollView.canScrollVertically(-1);
         }
         return super.canChildScrollUp();
+    }
+
+    @Override
+    public void setRefreshing(boolean refreshing) {
+        super.setRefreshing(refreshing);
+        isRefreshing = refreshing;
     }
 }

@@ -18,7 +18,7 @@ public class BootReceiver extends BroadcastReceiver {
             Log.d("BootReceiver", "Boot completed — scheduling worker");
 
             PeriodicWorkRequest workRequest =
-                    new PeriodicWorkRequest.Builder(HiWorker.class, 15, TimeUnit.MINUTES)
+                    new PeriodicWorkRequest.Builder(HiWorker.class, 300, TimeUnit.MINUTES)
                             .build();
 
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(

@@ -151,8 +151,8 @@ public class CoordinatesFinderLibraries {
                             }
 
                             // Update the RecyclerView with the list of places
-                            PlaceAdapter_2 adapter = new PlaceAdapter_2(context, places);
-                            container.setAdapter(adapter);
+                            //PlaceAdapter_2 adapter = new PlaceAdapter_2(context, places);
+                            //container.setAdapter(adapter);
                         }
                     } catch (JSONException e) {
                         Log.e("DistanceMatrixError", "Error parsing distance response: " + e.getMessage());

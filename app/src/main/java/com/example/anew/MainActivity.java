@@ -13,6 +13,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.animation.Animation;
@@ -32,6 +34,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
@@ -53,38 +56,29 @@ public class MainActivity extends AppCompatActivity {
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     private static final int MAP_REQUEST_CODE = 100;
     private FusedLocationProviderClient fusedLocationProviderClient;
-    private TextView resultView;
-    private TextView recommendedText;
     private Button searchButton;
     private Location userLocation;
     private RecyclerView resultsContainer;
     private ImageView errorImageView;
+    private SwipeRefreshLayout swipeRefreshLayout;
+    private TextView recommendedText;
 
     private CordinatesFinderChurches cordinatesFinderChurches = new CordinatesFinderChurches();
-    /*private CordinatesFinderMuseums cordinatesFinderMuseums = new CordinatesFinderMuseums();
-    private CordinatesFinderArtGalleries cordinatesFinderArtGalleries = new CordinatesFinderArtGalleries();
-    private CordinatesFinderParks cordinatesFinderParks = new CordinatesFinderParks();
-    private CoordinatesFinderLibraries coordinatesFinderLibraries = new CoordinatesFinderLibraries();
-    private CordinatesFinderFood cordinatesFinderFood = new CordinatesFinderFood();
-    private CordinatesFinderHotels cordinatesHotels = new CordinatesFinderHotels();
-    private TheNearestChurch theNearestChurch = new TheNearestChurch();
-    private CoordinatesFinderOther coordinatesFinderOther=new CoordinatesFinderOther();*/
     private String apiKey = "AIzaSyD3aOclf9YRAKK9D0VfQPp0NLsGDCJ9xFU";
     private Button btn;
-    private CustomSwipeRefreshLayout swipeRefreshLayout;
-    private CustomSwipeRefreshLayout swipeRefreshLayoutCompass;
     private int totalCategories = 0;
     private int foundResults = 0;
     private static final int REQUEST_CODE_NOTIFICATIONS = 101;
     private static final String CHANNEL_ID = "hi_channel";
     private Handler handler = new Handler();
     private Runnable notifyRunnable;
-
+    private GestureDetector gestureDetector;
+    private static final int SWIPE_THRESHOLD = 100; // Minimum swipe distance
+    private static final int SWIPE_VELOCITY_THRESHOLD = 100; // Minimum swipe velocity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             Window window = getWindow();
             window.setStatusBarColor(ContextCompat.getColor(this, R.color.your_color));
@@ -107,27 +101,36 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // Initialize views
-        resultView = findViewById(R.id.text_location);
         searchButton = findViewById(R.id.searchButton);
         recommendedText = findViewById(R.id.recommendedText);
         resultsContainer = findViewById(R.id.resultsRecyclerView);
-        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
         resultsContainer.setLayoutManager(new GridLayoutManager(this, 2));
         errorImageView = findViewById(R.id.errorImageView);
         btn = findViewById(R.id.btn);
 
+        // Set up SwipeRefreshLayout
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            if (!resultsContainer.canScrollVertically(-1)) {
+                List<String> selectedCategories = getSelectedCategories();
+                if (selectedCategories.isEmpty()) {
+                    loadRecommendedPlaces();
+                } else {
+                    searchButton.performClick();
+                }
+                new Handler(Looper.getMainLooper()).postDelayed(
+                    () -> swipeRefreshLayout.setRefreshing(false),
+                    1000
+                );
+            } else {
+                swipeRefreshLayout.setRefreshing(false);
+            }
+        });
+
         // Initialize FusedLocationProviderClient
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
-        // Retrieve data passed from ProfileActivity
-       /* SharedPreferences sharedPreferences = getSharedPreferences("ProfilePrefs", MODE_PRIVATE);
-        String fromWhere = sharedPreferences.getString("fromWhere", "from my place");
-        int radius = sharedPreferences.getString("inputDistance", "").isEmpty()
-                ? 5
-                : Integer.parseInt(sharedPreferences.getString("inputDistance", ""));*/
-
-
-        //Log.d("DEBUG", "Received fromProfile: " + fromProfile + ", fromWhere: " + fromWhere + ", radius: " + radius);
+        getLocation();
         ImageView compassImage = findViewById(R.id.compassImage);
         if (compassImage == null) {
             Log.e("DEBUgggG", "compassImage is null. Check if the ID in XML matches the ID in the code.");
@@ -199,16 +202,17 @@ public class MainActivity extends AppCompatActivity {
         searchButton.setOnClickListener(v -> {
             resultsContainer.removeAllViews();
             SharedPreferences sharedPreferences = getSharedPreferences("ProfilePrefs", MODE_PRIVATE);
-
-            String fromWhere = sharedPreferences.getString("fromWhere", "from my place");
+            String fromWhere = sharedPreferences.getString("fromWhere", "From my place");
             int radius = sharedPreferences.getString("inputDistance", "").isEmpty()
                     ? 5
                     : Integer.parseInt(sharedPreferences.getString("inputDistance", ""));
 
             btn.setVisibility(View.GONE);
             if (resultsContainer.getAdapter() != null) {
-                ((PlaceAdapter_2) resultsContainer.getAdapter()).clearData(); // Clear data in the adapter
+                ((PlaceAdapter_2) resultsContainer.getAdapter()).clearData();
             }
+            cordinatesFinderChurches.clearResults();
+
             if(userLocation==null){
                 showRotatingCompass(compassImage);
             }else{
@@ -231,7 +235,6 @@ public class MainActivity extends AppCompatActivity {
                 // Has internet -> hide compass and load favorites
                 compassImage.clearAnimation();
                 compassImage.setVisibility(View.GONE);
-
             }
             recommendedText.setText("Result");
             resultsContainer.removeAllViews();
@@ -247,25 +250,24 @@ public class MainActivity extends AppCompatActivity {
                 if (!selectedCategories.isEmpty()) {
                     double userLatitude = userLocation.getLatitude();
                     double userLongitude = userLocation.getLongitude();
-                    //Toast.makeText(MainActivity.this, fromWhere, Toast.LENGTH_SHORT).show();
-                    if (fromWhere.equals("From My Place") || fromWhere.equals("from my place")) {
-
-                        // Call the search function with the user's location
+                    
+                    if (fromWhere.equals("From my place")) {
+                        // Use current location directly
                         for (String category : selectedCategories) {
                             callSearchFunction(category, userLatitude, userLongitude, radius);
                         }
                     } else {
-                        //Toast.makeText(MainActivity.this, "fromWhere", Toast.LENGTH_SHORT).show();
+                        // Open map for location selection
                         Intent mapIntent = new Intent(MainActivity.this, KartaActivity.class);
                         startActivityForResult(mapIntent, MAP_REQUEST_CODE);
                     }
                 } else {
-                    //Toast.makeText(MainActivity.this, "Please select at least one category.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Please select at least one category.", Toast.LENGTH_SHORT).show();
                 }
             } else {
                 Toast.makeText(MainActivity.this, "Location not available. Please try again.", Toast.LENGTH_SHORT).show();
             }
-            if(fromWhere.equals("From My Place") || fromWhere.equals("from my place")){
+            if(fromWhere.equals("From my place")){
                 startCountdownAndCheckGrid();
                 new Handler(Looper.getMainLooper()).postDelayed(this::checkGridLayoutEmpty, 5000);
             }
@@ -294,6 +296,15 @@ public class MainActivity extends AppCompatActivity {
         discoverButton.setOnClickListener(v ->
                 Toast.makeText(MainActivity.this, "You are already in Main.", Toast.LENGTH_SHORT).show()
         );
+
+        // Set up the favorites button click listener
+        ImageButton favoritesButton = findViewById(R.id.favoritesButton);
+        favoritesButton.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, FavoritesActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            startActivity(intent);
+        });
+
         btn.setOnClickListener(v ->{
             Intent intent = new Intent(MainActivity.this, ProfileActivity.class);
             startActivity(intent);
@@ -310,51 +321,20 @@ public class MainActivity extends AppCompatActivity {
         updateSearchButtonState();
 
         requestNotificationPermission();
-        CustomSwipeRefreshLayout swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
-        InertialScrollView scrollView = findViewById(R.id.inertialScrollView);
 
-        // Associate the ScrollView with the SwipeRefreshLayout
-        swipeRefreshLayout.setAssociatedScrollView(scrollView);
+        // Initialize Gesture Detector
+        gestureDetector = new GestureDetector(this, new SwipeGestureListener());
 
-        // Set up refresh listener for SwipeRefreshLayout
-
-
-// Associate the ScrollView with the SwipeRefreshLayout
-        swipeRefreshLayout.setAssociatedScrollView(scrollView);
-
-// Associate the ScrollView with the SwipeRefreshLayout
-        swipeRefreshLayout.setAssociatedScrollView(scrollView);
-
-// Set up refresh listener for SwipeRefreshLayout
-        swipeRefreshLayout.setOnRefreshListener(() -> {
-            if (!scrollView.canScrollVertically(-1)) {
-                // ScrollView is at the top
-                Toast.makeText(this, "Refreshing...", Toast.LENGTH_SHORT).show();
-
-                List<String> selectedCategories = getSelectedCategories();
-
-                if (resultsContainer.getAdapter() != null) {
-                    ((PlaceAdapter_2) resultsContainer.getAdapter()).clearData(); // Clear data in the adapter
-                }
-
-                if (selectedCategories.isEmpty()) {
-                    // No checkboxes selected -> Refresh recommendations
-                    loadRecommendedPlaces();
-                } else {
-                    // Checkboxes selected -> Trigger search button click
-                    searchButton.performClick();
-                }
-
-                // Stop the refresh animation
-                new Handler(Looper.getMainLooper()).postDelayed(() -> swipeRefreshLayout.setRefreshing(false), 50);
-            } else {
-                // ScrollView is not at the top
-                swipeRefreshLayout.setRefreshing(false);
-                //Toast.makeText(this, "Scroll to the top to refresh", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-
+        // Set the touch listener on the swipeRefreshLayout or a root view
+        // swipeRefreshLayout is a good candidate as it's a main interactive area
+        if (swipeRefreshLayout != null) {
+            swipeRefreshLayout.setOnTouchListener((v, event) -> {
+                // Pass the touch event to the gesture detector
+                // Also, allow SwipeRefreshLayout to handle its own touch events for refresh
+                gestureDetector.onTouchEvent(event);
+                return false; // Return false to allow SwipeRefreshLayout to process the event too
+            });
+        }
     }
     private boolean isNetworkAvailable(Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -555,72 +535,46 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void callSearchFunction(String category, double latitude, double longitude, int radius) {
-
         switch (category) {
             case "churches":
-                //Toast.makeText(this, "Church", Toast.LENGTH_SHORT).show();
-                cordinatesFinderChurches.getChurchCoordinates("church",latitude, longitude, radius, apiKey, resultView, resultsContainer);
+                cordinatesFinderChurches.getChurchCoordinates("church", latitude, longitude, radius, apiKey, resultsContainer);
                 break;
             case "museums":
-                //cordinatesFinderMuseums.getMuseumCoordinates(latitude, longitude, radius, apiKey, resultView, resultsContainer);
-                cordinatesFinderChurches.getChurchCoordinates("museum",latitude, longitude, radius, apiKey, resultView, resultsContainer);
-
+                cordinatesFinderChurches.getChurchCoordinates("museum", latitude, longitude, radius, apiKey, resultsContainer);
                 break;
             case "art galleries":
-                //cordinatesFinderArtGalleries.getArtGalleryCoordinates(latitude, longitude, radius, apiKey, resultView, resultsContainer);
-                cordinatesFinderChurches.getChurchCoordinates("art_gallery art_museum",latitude, longitude, radius, apiKey, resultView, resultsContainer);
-
+                cordinatesFinderChurches.getChurchCoordinates("art_gallery art_museum", latitude, longitude, radius, apiKey, resultsContainer);
                 break;
             case "parks":
-                //cordinatesFinderParks.getParkCoordinates(latitude, longitude, radius, apiKey, resultView, resultsContainer);
-                cordinatesFinderChurches.getChurchCoordinates("park",latitude, longitude, radius, apiKey, resultView, resultsContainer);
-
+                cordinatesFinderChurches.getChurchCoordinates("park", latitude, longitude, radius, apiKey, resultsContainer);
                 break;
             case "libraries":
-                cordinatesFinderChurches.getChurchCoordinates("library",latitude, longitude, radius, apiKey, resultView, resultsContainer);
+                cordinatesFinderChurches.getChurchCoordinates("library", latitude, longitude, radius, apiKey, resultsContainer);
                 break;
             case "fastfood":
-                //cordinatesFinderFood.getFoodCoordinates(latitude, longitude, radius, apiKey, resultView, resultsContainer);
-                cordinatesFinderChurches.getChurchCoordinates("fast+food",latitude, longitude, radius, apiKey, resultView, resultsContainer);
-
+                cordinatesFinderChurches.getChurchCoordinates("fast+food", latitude, longitude, radius, apiKey, resultsContainer);
                 break;
             case "hotels":
-                //cordinatesHotels.getHotelCoordinates(latitude, longitude, radius, apiKey, resultView, resultsContainer);
-                cordinatesFinderChurches.getChurchCoordinates("hotels",latitude, longitude, radius, apiKey, resultView, resultsContainer);
-
+                cordinatesFinderChurches.getChurchCoordinates("hotels", latitude, longitude, radius, apiKey, resultsContainer);
                 break;
             case "gas":
-                //coordinatesFinderOther.getCoordinates(latitude, longitude, radius, apiKey, resultView, resultsContainer,category);
-                cordinatesFinderChurches.getChurchCoordinates("gas",latitude, longitude, radius, apiKey, resultView, resultsContainer);
-
+                cordinatesFinderChurches.getChurchCoordinates("gas", latitude, longitude, radius, apiKey, resultsContainer);
                 break;
             case "fortress":
-                //coordinatesFinderOther.getCoordinates(latitude, longitude, radius, apiKey, resultView, resultsContainer,category);
-                cordinatesFinderChurches.getChurchCoordinates("fortress",latitude, longitude, radius, apiKey, resultView, resultsContainer);
-
+                cordinatesFinderChurches.getChurchCoordinates("fortress", latitude, longitude, radius, apiKey, resultsContainer);
                 break;
             case "restaurants":
-                //coordinatesFinderOther.getCoordinates(latitude, longitude, radius, apiKey, resultView, resultsContainer,category);
-                cordinatesFinderChurches.getChurchCoordinates("restaurants",latitude, longitude, radius, apiKey, resultView, resultsContainer);
-
+                cordinatesFinderChurches.getChurchCoordinates("restaurants", latitude, longitude, radius, apiKey, resultsContainer);
                 break;
             case "theaters":
-                //coordinatesFinderOther.getCoordinates(latitude, longitude, radius, apiKey, resultView, resultsContainer,category);
-                cordinatesFinderChurches.getChurchCoordinates("theaters",latitude, longitude, radius, apiKey, resultView, resultsContainer);
-
+                cordinatesFinderChurches.getChurchCoordinates("theaters", latitude, longitude, radius, apiKey, resultsContainer);
                 break;
             case "shopping malls":
-                //coordinatesFinderOther.getCoordinates(latitude, longitude, radius, apiKey, resultView, resultsContainer,category);
-                cordinatesFinderChurches.getChurchCoordinates("shopping malls",latitude, longitude, radius, apiKey, resultView, resultsContainer);
-
+                cordinatesFinderChurches.getChurchCoordinates("shopping malls", latitude, longitude, radius, apiKey, resultsContainer);
                 break;
             case "hospital":
-                cordinatesFinderChurches.getChurchCoordinates("hospital",latitude, longitude, radius, apiKey, resultView, resultsContainer);
-
-                //coordinatesFinderOther.getCoordinates(latitude, longitude, radius, apiKey, resultView, resultsContainer,category);
+                cordinatesFinderChurches.getChurchCoordinates("hospital", latitude, longitude, radius, apiKey, resultsContainer);
                 break;
-
-
         }
     }
 
@@ -635,11 +589,35 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadRecommendedPlaces() {
+        Log.d("Recommendations", "loadRecommendedPlaces called");
+
+        if (cordinatesFinderChurches != null) {
+            cordinatesFinderChurches.clearResults();
+            Log.d("Recommendations", "CordinatesFinderChurches results cleared");
+        }
+
+        if (resultsContainer.getAdapter() != null) {
+            if (resultsContainer.getAdapter() instanceof PlaceAdapter_2) {
+                ((PlaceAdapter_2) resultsContainer.getAdapter()).clearData();
+                Log.d("Recommendations", "Adapter data cleared");
+            }
+        } else {
+            resultsContainer.removeAllViews(); // Fallback if adapter is null
+            Log.d("Recommendations", "RecyclerView views cleared (no adapter)");
+        }
+        
+        recommendedText.setText("Recommended"); // Set title for recommendations
 
         ImageView compassImage = findViewById(R.id.compassImage);
-        resultsContainer.removeAllViews();
-        if (!isNetworkAvailable(this) || userLocation==null) {
-            // No internet -> show rotating compass
+        // resultsContainer.removeAllViews(); // Already handled by clearing adapter or views above
+
+        if (userLocation == null) {
+            Log.w("Recommendations", "User location is null. Cannot load recommendations yet.");
+            // UI for no location/network is handled below, but good to log
+        }
+        
+        if (!isNetworkAvailable(this) || userLocation == null) {
+            Log.w("Recommendations", "No network or location. Showing rotating compass.");
             RotateAnimation rotate = new RotateAnimation(
                     0f, 360f,
                     Animation.RELATIVE_TO_SELF, 0.5f,
@@ -650,107 +628,104 @@ public class MainActivity extends AppCompatActivity {
             compassImage.startAnimation(rotate);
             compassImage.setVisibility(View.VISIBLE);
 
-            Toast.makeText(this, "No internet connection", Toast.LENGTH_SHORT).show();
+            if (!isNetworkAvailable(this)) Toast.makeText(this, "No internet connection", Toast.LENGTH_SHORT).show();
+            // Toast for userLocation == null is handled by getLocation() or other UI elements
         } else {
-            // Has internet -> hide compass and load favorites
+            Log.d("Recommendations", "Network and location available. Hiding compass.");
             compassImage.clearAnimation();
             compassImage.setVisibility(View.GONE);
-
         }
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
         if (user == null) {
-            Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show();
+            Log.d("Recommendations", "User not logged in (Guest mode). Loading default recommendations.");
+            // Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show(); // Can be noisy
             if (userLocation != null) {
                 double userLatitude = userLocation.getLatitude();
                 double userLongitude = userLocation.getLongitude();
-                cordinatesFinderChurches.getChurchCoordinates("church",userLatitude, userLongitude, 10, apiKey, resultView, resultsContainer);
-
-                //theNearestChurch.getChurchCoordinates(userLatitude, userLongitude, apiKey, resultView, resultsContainer,"museum");
-                cordinatesFinderChurches.getChurchCoordinates("museum",userLatitude, userLongitude, 10, apiKey, resultView, resultsContainer);
-
-                //theNearestChurch.getChurchCoordinates(userLatitude, userLongitude, apiKey, resultView, resultsContainer,"park");
-                cordinatesFinderChurches.getChurchCoordinates("park",userLatitude, userLongitude, 10, apiKey, resultView, resultsContainer);
-
-                //theNearestChurch.getChurchCoordinates(userLatitude, userLongitude, apiKey, resultView, resultsContainer,"hotel");
-                cordinatesFinderChurches.getChurchCoordinates("hotel",userLatitude, userLongitude, 10, apiKey, resultView, resultsContainer);
-
-                //theNearestChurch.getChurchCoordinates(userLatitude, userLongitude, apiKey, resultView, resultsContainer,"gas+station");
-                cordinatesFinderChurches.getChurchCoordinates("gas+station",userLatitude, userLongitude, 10, apiKey, resultView, resultsContainer);
-
-                //theNearestChurch.getChurchCoordinates(userLatitude, userLongitude, apiKey, resultView, resultsContainer,"art_gallery art_museum");
-                cordinatesFinderChurches.getChurchCoordinates("art_gallery art_museum",userLatitude, userLongitude, 10, apiKey, resultView, resultsContainer);
-
-                //theNearestChurch.getChurchCoordinates(userLatitude, userLongitude, apiKey, resultView, resultsContainer,"library");
-                cordinatesFinderChurches.getChurchCoordinates("library",userLatitude, userLongitude, 10, apiKey, resultView, resultsContainer);
-
-                //cordinatesFinderFood.getFoodCoordinates(userLatitude, userLongitude, 5, apiKey, resultView, resultsContainer);
-                cordinatesFinderChurches.getChurchCoordinates("fast+food",userLatitude, userLongitude, 10, apiKey, resultView, resultsContainer);
-
-                //theNearestChurch.getChurchCoordinates(userLatitude, userLongitude, apiKey, resultView, resultsContainer,"hospital");
-                cordinatesFinderChurches.getChurchCoordinates("hospital",userLatitude, userLongitude, 10, apiKey, resultView, resultsContainer);
-
-                return;
+                
+                Log.d("Recommendations", "Guest: Fetching default categories.");
+                cordinatesFinderChurches.getChurchCoordinates("church", userLatitude, userLongitude, 10, apiKey, resultsContainer);
+                cordinatesFinderChurches.getChurchCoordinates("museum", userLatitude, userLongitude, 10, apiKey, resultsContainer);
+                cordinatesFinderChurches.getChurchCoordinates("park", userLatitude, userLongitude, 10, apiKey, resultsContainer);
+                cordinatesFinderChurches.getChurchCoordinates("hotel", userLatitude, userLongitude, 10, apiKey, resultsContainer); // Corrected keyword
+                cordinatesFinderChurches.getChurchCoordinates("gas_station", userLatitude, userLongitude, 10, apiKey, resultsContainer); // Corrected keyword
+                cordinatesFinderChurches.getChurchCoordinates("art_gallery", userLatitude, userLongitude, 10, apiKey, resultsContainer); // Simplified from "art_gallery art_museum" for broader results if needed
+                cordinatesFinderChurches.getChurchCoordinates("library", userLatitude, userLongitude, 10, apiKey, resultsContainer);
+                cordinatesFinderChurches.getChurchCoordinates("fast_food", userLatitude, userLongitude, 10, apiKey, resultsContainer); // Corrected keyword
+                cordinatesFinderChurches.getChurchCoordinates("hospital", userLatitude, userLongitude, 10, apiKey, resultsContainer);
+            } else {
+                Log.w("Recommendations", "Guest: User location is null. Cannot fetch default recommendations.");
             }
+            return; // Important: Guest recommendations loaded, exit here.
         }
 
-
+        // Logged-in user
+        Log.d("Recommendations", "User is logged in: " + user.getUid());
         if (userLocation != null) {
             double userLatitude = userLocation.getLatitude();
             double userLongitude = userLocation.getLongitude();
             FirebaseFirestore db = FirebaseFirestore.getInstance();
 
+            Log.d("Recommendations", "Logged-in: Fetching user preferences.");
             db.collection("UserPreferences").document(user.getUid())
                     .get()
                     .addOnSuccessListener(documentSnapshot -> {
                         if (documentSnapshot.exists()) {
+                            Log.d("Recommendations", "Logged-in: Preferences document found.");
                             List<String> selectedPlaces = (List<String>) documentSnapshot.get("selectedPlaces");
 
                             if (selectedPlaces == null || selectedPlaces.isEmpty()) {
-                                //Toast.makeText(this, "No preferences found", Toast.LENGTH_SHORT).show();
-                                return;
-                            }
-
-                            for (String place : selectedPlaces) {
-                                Toast.makeText(this, place, Toast.LENGTH_SHORT).show();
-
-                                switch (place.toLowerCase()) {
-
-                                    case "mountains":
-                                        cordinatesFinderChurches.getChurchCoordinates("mountain",userLatitude, userLongitude, 10, apiKey, resultView, resultsContainer);
-                                        Toast.makeText(this, "No preferences selected by user", Toast.LENGTH_SHORT).show();
-
-                                        break;
-                                    case "churches":
-                                        cordinatesFinderChurches.getChurchCoordinates("church",userLatitude, userLongitude, 10, apiKey, resultView, resultsContainer);
-                                        break;
-                                    case "museums":
-                                        cordinatesFinderChurches.getChurchCoordinates("museum",userLatitude, userLongitude, 10, apiKey, resultView, resultsContainer);
-                                        //theNearestChurch.getChurchCoordinates(userLatitude, userLongitude, apiKey, resultView, resultsContainer, "art_gallery");
-                                        break;
-                                    case "skip":
-                                        Toast.makeText(this, "No preferences selected by user", Toast.LENGTH_SHORT).show();
-                                        return;
-                                    default:
-                                        // Optionally handle unknown cases
-                                        Log.w("LoadPlaces", "Unknown place type: " + place);
+                                Log.d("Recommendations", "Logged-in: No specific preferences found or list is empty. Will load general recommendations.");
+                                // Fall through to load general recommendations if preferences are empty
+                            } else {
+                                Log.d("Recommendations", "Logged-in: Found preferences: " + selectedPlaces.toString());
+                                for (String place : selectedPlaces) {
+                                    String keyword = place.toLowerCase().replace(" ", "_"); // Basic keyword conversion
+                                    Log.d("Recommendations", "Logged-in: Fetching based on preference: " + keyword);
+                                    switch (keyword) { // Ensure keywords match Google Places API types or are general search terms
+                                        case "mountains":
+                                            cordinatesFinderChurches.getChurchCoordinates("mountain", userLatitude, userLongitude, 10, apiKey, resultsContainer);
+                                            break;
+                                        case "churches":
+                                            cordinatesFinderChurches.getChurchCoordinates("church", userLatitude, userLongitude, 10, apiKey, resultsContainer);
+                                            break;
+                                        case "museums":
+                                            cordinatesFinderChurches.getChurchCoordinates("museum", userLatitude, userLongitude, 10, apiKey, resultsContainer);
+                                            break;
+                                        case "skip": // If "skip" is a preference, do nothing for it.
+                                            Log.d("Recommendations", "Logged-in: Preference 'skip' encountered.");
+                                            break;
+                                        default: // For other preferences, use them as keywords
+                                            Log.d("Recommendations", "Logged-in: Fetching general keyword from preference: " + keyword);
+                                            cordinatesFinderChurches.getChurchCoordinates(keyword, userLatitude, userLongitude, 10, apiKey, resultsContainer);
+                                            break;
+                                    }
                                 }
                             }
-
-                            cordinatesFinderChurches.getChurchCoordinates("tourist_attraction",userLatitude, userLongitude, 20, apiKey, resultView, resultsContainer);
-                            cordinatesFinderChurches.getChurchCoordinates("fast+food",userLatitude, userLongitude, 10, apiKey, resultView, resultsContainer);
-                            cordinatesFinderChurches.getChurchCoordinates("shopping_mall",userLatitude, userLongitude, 20, apiKey, resultView, resultsContainer);
-
-
+                        } else {
+                             Log.d("Recommendations", "Logged-in: No preferences document found. Will load general recommendations.");
                         }
+                        // Load general recommendations regardless of preferences or if document doesn't exist
+                        Log.d("Recommendations", "Logged-in: Fetching additional general recommendations.");
+                        cordinatesFinderChurches.getChurchCoordinates("tourist_attraction", userLatitude, userLongitude, 20, apiKey, resultsContainer);
+                        cordinatesFinderChurches.getChurchCoordinates("fast_food", userLatitude, userLongitude, 10, apiKey, resultsContainer); // Corrected keyword
+                        cordinatesFinderChurches.getChurchCoordinates("shopping_mall", userLatitude, userLongitude, 20, apiKey, resultsContainer);
                     })
                     .addOnFailureListener(e -> {
+                        Log.e("Recommendations", "Logged-in: Failed to load preferences: " + e.getMessage(), e);
                         Toast.makeText(this, "Failed to load preferences: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                        Log.e("Firestore", "Error getting document", e);
+                        // Still try to load general recommendations on failure
+                        Log.d("Recommendations", "Logged-in: Fetching general recommendations after preference load failure.");
+                        cordinatesFinderChurches.getChurchCoordinates("tourist_attraction", userLatitude, userLongitude, 20, apiKey, resultsContainer);
+                        cordinatesFinderChurches.getChurchCoordinates("fast_food", userLatitude, userLongitude, 10, apiKey, resultsContainer);
+                        cordinatesFinderChurches.getChurchCoordinates("shopping_mall", userLatitude, userLongitude, 20, apiKey, resultsContainer);
                     });
-            }
+        } else {
+            Log.w("Recommendations", "Logged-in: User location is null. Cannot fetch recommendations.");
         }
+    }
 
     private void changeCheckboxColor() {
         CheckBox checkChurches = findViewById(R.id.checkChurches);
@@ -861,5 +836,58 @@ public class MainActivity extends AppCompatActivity {
         for (CheckBox checkBox : checkBoxes) {
             checkBox.setOnClickListener(listener);
         }
+    }
+
+    // Custom Gesture Listener
+    private class SwipeGestureListener extends GestureDetector.SimpleOnGestureListener {
+        @Override
+        public boolean onDown(MotionEvent e) {
+            return true; // Necessary for onFling to work
+        }
+
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            boolean result = false;
+            try {
+                float diffY = e2.getY() - e1.getY();
+                float diffX = e2.getX() - e1.getX();
+
+                if (Math.abs(diffX) > Math.abs(diffY)) { // Prioritize horizontal swipes
+                    if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                        if (diffX > 0) {
+                            // Right Swipe
+                            onSwipeRight();
+                        } else {
+                            // Left Swipe
+                            onSwipeLeft();
+                        }
+                        result = true;
+                    }
+                }
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
+            return result;
+        }
+    }
+
+    private void onSwipeRight() {
+        // Navigate to FavoritesActivity
+        Log.d("SwipeGesture", "Right swipe detected, navigating to FavoritesActivity");
+        Intent intent = new Intent(MainActivity.this, FavoritesActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        startActivity(intent);
+        // Optional: Add slide animation from left to right
+        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+    }
+
+    private void onSwipeLeft() {
+        // Navigate to ProfileActivity
+        Log.d("SwipeGesture", "Left swipe detected, navigating to ProfileActivity");
+        Intent intent = new Intent(MainActivity.this, ProfileActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        startActivity(intent);
+        // Optional: Add slide animation from right to left
+        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
     }
 }
