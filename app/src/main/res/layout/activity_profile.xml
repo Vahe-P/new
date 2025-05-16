@@ -219,6 +219,17 @@
         android:padding="16dp">
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/appearanceButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Appearance"
+            android:textColor="#FFFFFF"
+            android:padding="12dp"
+            android:layout_marginBottom="8dp"
+            app:cornerRadius="8dp"
+            android:backgroundTint="@color/your_color"/>
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/helpCenterButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

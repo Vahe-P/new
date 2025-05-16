@@ -17,6 +17,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ProgressBar;
+import android.widget.FrameLayout;
 
 import androidx.core.content.res.ResourcesCompat;
 
@@ -222,21 +224,53 @@ public class CordinatesFinderFood {
                 imageParams.gravity = Gravity.CENTER_HORIZONTAL;
                 imageView.setLayoutParams(imageParams);
                 imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                imageView.setImageResource(R.drawable.download);
 
                 // Set rounded corners
                 imageView.setBackgroundResource(R.drawable.rounded_corners);
                 imageView.setClipToOutline(true);
 
+                // Create a ProgressBar for loading indication
+                ProgressBar imageProgressBar = new ProgressBar(container.getContext());
+                LinearLayout.LayoutParams progressBarParams = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT);
+                progressBarParams.gravity = Gravity.CENTER;
+                imageProgressBar.setLayoutParams(progressBarParams);
+                
+                // Create a FrameLayout to hold ImageView and ProgressBar
+                FrameLayout imageFrame = new FrameLayout(container.getContext());
+                LinearLayout.LayoutParams frameParams = new LinearLayout.LayoutParams(imageSize, imageSize);
+                frameParams.gravity = Gravity.CENTER_HORIZONTAL;
+                imageFrame.setLayoutParams(frameParams);
+
+                imageFrame.addView(imageView);
+                imageFrame.addView(imageProgressBar);
+
+                // Initially, show ProgressBar and set placeholder for ImageView
+                imageProgressBar.setVisibility(View.VISIBLE);
+                imageView.setImageResource(R.drawable.download); // Set placeholder
+
                 // Load the image from the URL if available
                 if (photoUrl != null) {
                     RequestQueue queue = Volley.newRequestQueue(container.getContext());
                     ImageRequest imageRequest = new ImageRequest(photoUrl,
-                            response -> imageView.setImageDrawable(new BitmapDrawable(container.getResources(), response)),
-                            0, 0, null, null,
-                            error -> Log.e("ImageLoadError", "Error loading image: " + error.getMessage()));
+                            response -> {
+                                imageView.setImageDrawable(new BitmapDrawable(container.getResources(), response));
+                                imageProgressBar.setVisibility(View.GONE); // Hide ProgressBar on success
+                            },
+                            0, 0, ImageView.ScaleType.CENTER_CROP, null, // Added ScaleType
+                            error -> {
+                                Log.e("ImageLoadError", "Error loading image: " + error.getMessage());
+                                imageProgressBar.setVisibility(View.GONE); // Hide ProgressBar on error
+                                // Optionally, set an error image or keep the placeholder
+                                imageView.setImageResource(R.drawable.baseline_error_24); // Example error image - ensure this drawable exists
+                            });
                     queue.add(imageRequest);
+                } else {
+                    imageProgressBar.setVisibility(View.GONE); // Hide ProgressBar if no photoUrl
+                    imageView.setImageResource(R.drawable.baseline_hide_image_24); // Example 'no image' placeholder - ensure this drawable exists
                 }
+
                 TextView categoryView=new TextView(container.getContext());
                 categoryView.setText("Eating Spot");
                 categoryView.setGravity(Gravity.LEFT | Gravity.BOTTOM);
@@ -266,8 +300,7 @@ public class CordinatesFinderFood {
 
 
                 // Add TextViews to the button layout
-                buttonLayout.addView(imageView);
-
+                buttonLayout.addView(imageFrame); // Add FrameLayout instead of ImageView directly
                 buttonLayout.addView(categoryView);
                 buttonLayout.addView(textView);
                 buttonLayout.addView(distanceView);
@@ -297,7 +330,7 @@ public class CordinatesFinderFood {
 
 
                 if (currentUser == null) {
-                    Toast.makeText(container.getContext(), "You must be signed in to save favorites", Toast.LENGTH_SHORT).show();
+                    // Toast.makeText(container.getContext(), "You must be signed in to save favorites", Toast.LENGTH_SHORT).show();
 
                 }else{
 
@@ -336,23 +369,23 @@ public class CordinatesFinderFood {
                                 favoriteRef.set(favoritePlace)
                                         .addOnSuccessListener(aVoid -> {
                                             starButton.setImageResource(R.drawable.ic_star_filled);
-                                            Toast.makeText(container.getContext(), "Added to favorites", Toast.LENGTH_SHORT).show();
+                                            // Toast.makeText(container.getContext(), "Added to favorites", Toast.LENGTH_SHORT).show();
                                         })
                                         .addOnFailureListener(e -> {
                                             isFavorite[0] = false;
                                             starButton.setImageResource(R.drawable.ic_star_empty);
-                                            Toast.makeText(container.getContext(), "Failed to add", Toast.LENGTH_SHORT).show();
+                                            // Toast.makeText(container.getContext(), "Failed to add", Toast.LENGTH_SHORT).show();
                                         });
                             } else {
                                 favoriteRef.delete()
                                         .addOnSuccessListener(aVoid -> {
                                             starButton.setImageResource(R.drawable.ic_star_empty);
-                                            Toast.makeText(container.getContext(), "Removed from favorites", Toast.LENGTH_SHORT).show();
+                                            // Toast.makeText(container.getContext(), "Removed from favorites", Toast.LENGTH_SHORT).show();
                                         })
                                         .addOnFailureListener(e -> {
                                             isFavorite[0] = true;
                                             starButton.setImageResource(R.drawable.ic_star_filled);
-                                            Toast.makeText(container.getContext(), "Failed to remove", Toast.LENGTH_SHORT).show();
+                                            // Toast.makeText(container.getContext(), "Failed to remove", Toast.LENGTH_SHORT).show();
                                         });
                             }
                         }

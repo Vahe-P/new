@@ -49,6 +49,7 @@ public class ProfileActivity extends AppCompatActivity {
     private MaterialButton deleteAccountButton;
     private LinearLayout accountManagementButtonsContainer;
     private MaterialButton helpCenterButton;
+    private MaterialButton appearanceButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,6 +98,7 @@ public class ProfileActivity extends AppCompatActivity {
         deleteAccountButton = findViewById(R.id.deleteAccountButton);
         accountManagementButtonsContainer = findViewById(R.id.accountManagementButtonsContainer);
         helpCenterButton = findViewById(R.id.helpCenterButton);
+        appearanceButton = findViewById(R.id.appearanceButton);
     }
 
     private void setupUserInterface() {
@@ -169,6 +171,8 @@ public class ProfileActivity extends AppCompatActivity {
             Intent intent = new Intent(ProfileActivity.this, HelpCenterActivity.class);
             startActivity(intent);
         });
+
+        appearanceButton.setOnClickListener(v -> showAppearanceDialog());
     }
 
     private void showLogoutConfirmationDialog() {
@@ -326,6 +330,50 @@ public class ProfileActivity extends AppCompatActivity {
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
+    }
+
+    private void showAppearanceDialog() {
+        final String[] options = {"System default", "Always dark", "Always light"};
+        int checkedItem = getSavedAppearanceIndex();
+        new AlertDialog.Builder(this)
+                .setTitle("Choose Appearance")
+                .setSingleChoiceItems(options, checkedItem, (dialog, which) -> {
+                    saveAppearanceChoice(which);
+                    applyAppearance(which);
+                    dialog.dismiss();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private int getSavedAppearanceIndex() {
+        SharedPreferences prefs = getSharedPreferences("ProfilePrefs", MODE_PRIVATE);
+        return prefs.getInt("appearance_mode", 0);
+    }
+
+    private void saveAppearanceChoice(int index) {
+        SharedPreferences prefs = getSharedPreferences("ProfilePrefs", MODE_PRIVATE);
+        prefs.edit().putInt("appearance_mode", index).apply();
+    }
+
+    private void applyAppearance(int index) {
+        switch (index) {
+            case 1:
+                androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES);
+                break;
+            case 2:
+                androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO);
+                break;
+            default:
+                androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                break;
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        applyAppearance(getSavedAppearanceIndex());
     }
 }
 

@@ -142,7 +142,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
                                         errorMessage = "One or both locations could not be found";
                                         break;
                                     case "REQUEST_DENIED":
-                                        errorMessage = "Request was denied. Please check your API key";
+                                        errorMessage = "For now unable to find the route";
                                         break;
                                     default:
                                         errorMessage = "Could not find route: " + status;

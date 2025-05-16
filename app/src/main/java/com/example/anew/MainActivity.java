@@ -163,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             if (userLocation == null) {
-                Toast.makeText(this, "Location is not available", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(this, "Location is not available", Toast.LENGTH_SHORT).show();
             }
         }
 
@@ -182,9 +182,7 @@ public class MainActivity extends AppCompatActivity {
 
                 Toast.makeText(this, "No internet connection", Toast.LENGTH_SHORT).show();
             }
-            if (userLocation == null){
-                Toast.makeText(this, "Location is not available", Toast.LENGTH_SHORT).show();
-            }
+
 
         } if(isNetworkAvailable(this) && userLocation != null) {
             // Has internet -> hide compass and load favorites
@@ -192,7 +190,7 @@ public class MainActivity extends AppCompatActivity {
             compassImage.setVisibility(View.GONE);
         }
         if(userLocation==null){
-            Toast.makeText(this, "Location isjkdsfvndjnkfvj not available", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(this, "Location is not available", Toast.LENGTH_SHORT).show();
 
             showRotatingCompass(compassImage);
         }
@@ -342,7 +340,6 @@ public class MainActivity extends AppCompatActivity {
         return networkInfo != null && networkInfo.isConnected();
     }
     private void showRotatingCompass(ImageView compassImage) {
-        Toast.makeText(this, "Location is notpppppppppp available", Toast.LENGTH_SHORT).show();
 
         RotateAnimation rotate = new RotateAnimation(
                 0f, 360f,
