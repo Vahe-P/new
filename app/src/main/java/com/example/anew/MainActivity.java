@@ -158,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             if (userLocation == null) {
-                Toast.makeText(this, "Location is not available", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(this, "Location is not available", Toast.LENGTH_SHORT).show();
             }
         }
 
@@ -175,15 +175,25 @@ public class MainActivity extends AppCompatActivity {
             if(!isNetworkAvailable(this) ){
                 Toast.makeText(this, "No internet connection", Toast.LENGTH_SHORT).show();
             }
+<<<<<<< HEAD
             if (userLocation == null){
                 Toast.makeText(this, "Location is not available", Toast.LENGTH_SHORT).show();
             }
+=======
+
+
+>>>>>>> 2ef41b3152620b48a7166eb50f19d0cef7c9a2f9
         } if(isNetworkAvailable(this) && userLocation != null) {
             compassImage.clearAnimation();
             compassImage.setVisibility(View.GONE);
         }
         if(userLocation==null){
+<<<<<<< HEAD
             Toast.makeText(this, "Location isjkdsfvndjnkfvj not available", Toast.LENGTH_SHORT).show();
+=======
+            //Toast.makeText(this, "Location is not available", Toast.LENGTH_SHORT).show();
+
+>>>>>>> 2ef41b3152620b48a7166eb50f19d0cef7c9a2f9
             showRotatingCompass(compassImage);
         }
 
@@ -281,6 +291,12 @@ public class MainActivity extends AppCompatActivity {
             intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
             startActivity(intent);
         });
+        ImageButton PostActivityButton = findViewById(R.id.postsButton);
+        PostActivityButton.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, PostsActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            startActivity(intent);
+        });
 
         btn.setOnClickListener(v ->{
             Intent intent = new Intent(MainActivity.this, ProfileActivity.class);
@@ -308,7 +324,6 @@ public class MainActivity extends AppCompatActivity {
         return networkInfo != null && networkInfo.isConnected();
     }
     private void showRotatingCompass(ImageView compassImage) {
-        Toast.makeText(this, "Location is notpppppppppp available", Toast.LENGTH_SHORT).show();
 
         RotateAnimation rotate = new RotateAnimation(
                 0f, 360f,
@@ -511,6 +526,160 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+<<<<<<< HEAD
+=======
+    private void onResultFound(boolean found) {
+        if (found) {
+            foundResults++;
+        }
+        totalCategories--;
+        if (totalCategories == 0 && foundResults == 0) {
+            errorImageView.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void loadRecommendedPlaces() {
+        Log.d("Recommendations", "loadRecommendedPlaces called");
+
+        if (cordinatesFinderChurches != null) {
+            cordinatesFinderChurches.clearResults();
+            Log.d("Recommendations", "CordinatesFinderChurches results cleared");
+        }
+
+        if (resultsContainer.getAdapter() != null) {
+            if (resultsContainer.getAdapter() instanceof PlaceAdapter_2) {
+                ((PlaceAdapter_2) resultsContainer.getAdapter()).clearData();
+                Log.d("Recommendations", "Adapter data cleared");
+            }
+        } else {
+            resultsContainer.removeAllViews(); // Fallback if adapter is null
+            Log.d("Recommendations", "RecyclerView views cleared (no adapter)");
+        }
+        
+        recommendedText.setText("Recommended"); // Set title for recommendations
+
+        ImageView compassImage = findViewById(R.id.compassImage);
+        // resultsContainer.removeAllViews(); // Already handled by clearing adapter or views above
+
+        if (userLocation == null) {
+            Log.w("Recommendations", "User location is null. Cannot load recommendations yet.");
+            // UI for no location/network is handled below, but good to log
+        }
+        
+        if (!isNetworkAvailable(this) || userLocation == null) {
+            Log.w("Recommendations", "No network or location. Showing rotating compass.");
+            RotateAnimation rotate = new RotateAnimation(
+                    0f, 360f,
+                    Animation.RELATIVE_TO_SELF, 0.5f,
+                    Animation.RELATIVE_TO_SELF, 0.5f
+            );
+            rotate.setDuration(2000);
+            rotate.setRepeatCount(Animation.INFINITE);
+            compassImage.startAnimation(rotate);
+            compassImage.setVisibility(View.VISIBLE);
+
+            if (!isNetworkAvailable(this)) Toast.makeText(this, "No internet connection", Toast.LENGTH_SHORT).show();
+            // Toast for userLocation == null is handled by getLocation() or other UI elements
+        } else {
+            Log.d("Recommendations", "Network and location available. Hiding compass.");
+            compassImage.clearAnimation();
+            compassImage.setVisibility(View.GONE);
+        }
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+        if (user == null) {
+            Log.d("Recommendations", "User not logged in (Guest mode). Loading default recommendations.");
+            // Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show(); // Can be noisy
+            if (userLocation != null) {
+                double userLatitude = userLocation.getLatitude();
+                double userLongitude = userLocation.getLongitude();
+                
+                Log.d("Recommendations", "Guest: Fetching default categories.");
+                cordinatesFinderChurches.getChurchCoordinates("church", userLatitude, userLongitude, 10, apiKey, resultsContainer);
+                cordinatesFinderChurches.getChurchCoordinates("museum", userLatitude, userLongitude, 10, apiKey, resultsContainer);
+                cordinatesFinderChurches.getChurchCoordinates("park", userLatitude, userLongitude, 10, apiKey, resultsContainer);
+                cordinatesFinderChurches.getChurchCoordinates("hotel", userLatitude, userLongitude, 10, apiKey, resultsContainer); // Corrected keyword
+                cordinatesFinderChurches.getChurchCoordinates("gas_station", userLatitude, userLongitude, 10, apiKey, resultsContainer); // Corrected keyword
+                cordinatesFinderChurches.getChurchCoordinates("art_gallery", userLatitude, userLongitude, 10, apiKey, resultsContainer); // Simplified from "art_gallery art_museum" for broader results if needed
+                cordinatesFinderChurches.getChurchCoordinates("library", userLatitude, userLongitude, 10, apiKey, resultsContainer);
+                cordinatesFinderChurches.getChurchCoordinates("fast_food", userLatitude, userLongitude, 10, apiKey, resultsContainer); // Corrected keyword
+                cordinatesFinderChurches.getChurchCoordinates("hospital", userLatitude, userLongitude, 10, apiKey, resultsContainer);
+            } else {
+                Log.w("Recommendations", "Guest: User location is null. Cannot fetch default recommendations.");
+            }
+            return; // Important: Guest recommendations loaded, exit here.
+        }
+
+        // Logged-in user
+        Log.d("Recommendations", "User is logged in: " + user.getUid());
+        if (userLocation != null) {
+            double userLatitude = userLocation.getLatitude();
+            double userLongitude = userLocation.getLongitude();
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+            Log.d("Recommendations", "Logged-in: Fetching user preferences.");
+            db.collection("UserPreferences").document(user.getUid())
+                    .get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        if (documentSnapshot.exists()) {
+                            Log.d("Recommendations", "Logged-in: Preferences document found.");
+                            List<String> selectedPlaces = (List<String>) documentSnapshot.get("selectedPlaces");
+                            Log.d("Recommendations", "Logged-in: Raw preferences data: " + documentSnapshot.getData());
+
+                            if (selectedPlaces == null || selectedPlaces.isEmpty()) {
+                                Log.d("Recommendations", "Logged-in: No specific preferences found or list is empty. Will load general recommendations.");
+                                // Fall through to load general recommendations if preferences are empty
+                            } else {
+                                Log.d("Recommendations", "Logged-in: Found preferences: " + selectedPlaces.toString());
+                                for (String place : selectedPlaces) {
+                                    String keyword = place.toLowerCase().replace(" ", "_"); // Basic keyword conversion
+                                    Log.d("Recommendations", "Logged-in: Fetching based on preference: " + keyword);
+                                    switch (keyword) { // Ensure keywords match Google Places API types or are general search terms
+                                        case "mountains":
+                                            cordinatesFinderChurches.getChurchCoordinates("mountain", userLatitude, userLongitude, 10, apiKey, resultsContainer);
+                                            break;
+                                        case "churches":
+                                            cordinatesFinderChurches.getChurchCoordinates("church", userLatitude, userLongitude, 10, apiKey, resultsContainer);
+                                            break;
+                                        case "museums":
+                                            cordinatesFinderChurches.getChurchCoordinates("museum", userLatitude, userLongitude, 10, apiKey, resultsContainer);
+                                            break;
+                                        case "skip": // If "skip" is a preference, do nothing for it.
+                                            Log.d("Recommendations", "Logged-in: Preference 'skip' encountered.");
+                                            break;
+                                        default: // For other preferences, use them as keywords
+                                            Log.d("Recommendations", "Logged-in: Fetching general keyword from preference: " + keyword);
+                                            cordinatesFinderChurches.getChurchCoordinates(keyword, userLatitude, userLongitude, 10, apiKey, resultsContainer);
+                                            break;
+                                    }
+                                }
+                            }
+                        } else {
+                            Log.d("Recommendations", "Logged-in: No preferences document found. Will load general recommendations.");
+                        }
+                        // Load general recommendations regardless of preferences or if document doesn't exist
+                        Log.d("Recommendations", "Logged-in: Fetching additional general recommendations.");
+                        cordinatesFinderChurches.getChurchCoordinates("tourist_attraction", userLatitude, userLongitude, 20, apiKey, resultsContainer);
+                        cordinatesFinderChurches.getChurchCoordinates("fast_food", userLatitude, userLongitude, 10, apiKey, resultsContainer); // Corrected keyword
+                        cordinatesFinderChurches.getChurchCoordinates("shopping_mall", userLatitude, userLongitude, 20, apiKey, resultsContainer);
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e("Recommendations", "Logged-in: Failed to load preferences: " + e.getMessage(), e);
+                        Log.e("Recommendations", "Logged-in: Error type: " + e.getClass().getName());
+                        Toast.makeText(this, "Failed to load preferences: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        // Still try to load general recommendations on failure
+                        Log.d("Recommendations", "Logged-in: Fetching general recommendations after preference load failure.");
+                        cordinatesFinderChurches.getChurchCoordinates("tourist_attraction", userLatitude, userLongitude, 20, apiKey, resultsContainer);
+                        cordinatesFinderChurches.getChurchCoordinates("fast_food", userLatitude, userLongitude, 10, apiKey, resultsContainer);
+                        cordinatesFinderChurches.getChurchCoordinates("shopping_mall", userLatitude, userLongitude, 20, apiKey, resultsContainer);
+                    });
+        } else {
+            Log.w("Recommendations", "Logged-in: User location is null. Cannot fetch recommendations.");
+        }
+    }
+
+>>>>>>> 2ef41b3152620b48a7166eb50f19d0cef7c9a2f9
     private void changeCheckboxColor() {
         CheckBox checkChurches = findViewById(R.id.checkChurches);
         CheckBox checkMuseums = findViewById(R.id.checkMuseums);

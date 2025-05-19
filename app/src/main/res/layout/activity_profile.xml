@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:background="#F5F5F5">
 
     <!-- Top App Bar -->
@@ -65,14 +66,42 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <TextView
-                android:id="@+id/userEmailTextView"
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/profileImageView"
+                android:layout_width="96dp"
+                android:layout_height="96dp"
+                android:src="@drawable/default_avatar"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="8dp"
+                android:layout_marginTop="8dp"/>
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="user@example.com"
-                android:textSize="16sp"
-                android:textColor="#333333"
-                android:fontFamily="@font/roboto_condensed_black"/>
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/userName"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="user@example.com"
+                    android:textSize="16sp"
+                    android:textColor="#333333"
+                    android:fontFamily="@font/roboto_condensed_black"/>
+
+                <ImageButton
+                    android:id="@+id/editProfileButton"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@drawable/baseline_edit_24"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:padding="4dp"
+                    android:layout_marginStart="8dp"
+                    android:scaleType="fitCenter"
+                    android:adjustViewBounds="true"/>
+            </LinearLayout>
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
@@ -169,11 +198,11 @@
                         android:paddingEnd="8dp"
                         android:layout_marginStart="8dp"/>
                 </LinearLayout>
-
                 <ImageButton
                     android:id="@+id/notificationButton"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
+                    android:layout_marginLeft="5dp"
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
                     android:background="?attr/selectableItemBackgroundBorderless"
@@ -183,83 +212,89 @@
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
-    <!-- Preferences Button -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/preferencesButton"
+    <!-- Preferences and Main Content Scrollable Area -->
+    <ScrollView
+        android:id="@+id/profileScrollView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_above="@id/bottomButtons"
         android:layout_below="@id/userInfoCard"
-        android:layout_marginHorizontal="16dp"
-        android:text="Add / Change Preferences"
-        android:textColor="#FFFFFF"
-        android:padding="12dp"
-        app:cornerRadius="8dp"
-        android:backgroundTint="@color/your_color"/>
+        android:fillViewport="true">
 
-    <!-- Main Content -->
-    <LinearLayout
-        android:id="@+id/mainContent"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:layout_below="@id/preferencesButton"
-        android:layout_above="@id/bottomButtons"
-        android:layout_marginTop="16dp"
-        android:padding="16dp">
-
-    </LinearLayout>
-
-    <!-- Sources Button and Version Number -->
-    <LinearLayout
-        android:id="@+id/bottomInfo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_above="@id/bottomButtons"
-        android:padding="16dp">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/helpCenterButton"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Help Center"
-            android:textColor="#FFFFFF"
-            android:padding="12dp"
-            android:layout_marginBottom="8dp"
-            app:cornerRadius="8dp"
-            android:backgroundTint="@color/your_color"/>
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/feedbackButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Leave Feedback"
-            android:textColor="#FFFFFF"
-            android:padding="12dp"
-            android:layout_marginBottom="8dp"
-            app:cornerRadius="8dp"
-            android:backgroundTint="@color/your_color"/>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/preferencesButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Add / Change Preferences"
+                android:textColor="#FFFFFF"
+                android:padding="12dp"
+                android:layout_marginBottom="12dp"
+                app:cornerRadius="8dp"
+                android:backgroundTint="@color/your_color"/>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/sourcesButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Sources"
-            android:textColor="#FFFFFF"
-            android:padding="12dp"
-            app:cornerRadius="8dp"
-            android:backgroundTint="@color/your_color"/>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/appearanceButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Appearance"
+                android:textColor="#FFFFFF"
+                android:padding="12dp"
+                android:layout_marginBottom="12dp"
+                app:cornerRadius="8dp"
+                android:backgroundTint="@color/your_color"/>
 
-        <TextView
-            android:id="@+id/versionText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Version 1.1.0"
-            android:textAlignment="center"
-            android:textColor="#666666"
-            android:textSize="14sp"
-            android:layout_marginTop="8dp"/>
-    </LinearLayout>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/helpCenterButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Help Center"
+                android:textColor="#FFFFFF"
+                android:padding="12dp"
+                android:layout_marginBottom="12dp"
+                app:cornerRadius="8dp"
+                android:backgroundTint="@color/your_color"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/feedbackButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Leave Feedback"
+                android:textColor="#FFFFFF"
+                android:padding="12dp"
+                android:layout_marginBottom="12dp"
+                app:cornerRadius="8dp"
+                android:backgroundTint="@color/your_color"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/sourcesButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Sources"
+                android:textColor="#FFFFFF"
+                android:padding="12dp"
+                android:layout_marginBottom="12dp"
+                app:cornerRadius="8dp"
+                android:backgroundTint="@color/your_color"/>
+
+            <TextView
+                android:id="@+id/versionText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Version 1.1.0"
+                android:textAlignment="center"
+                android:textColor="#666666"
+                android:textSize="14sp"
+                android:layout_marginTop="16dp"/>
+
+        </LinearLayout>
+    </ScrollView>
 
     <!-- Bottom Navigation -->
     <com.google.android.material.card.MaterialCardView
@@ -296,6 +331,14 @@
                 android:src="@drawable/baseline_explore_24"
                 android:background="?android:attr/selectableItemBackground"
                 android:contentDescription="Discover"/>
+            <ImageButton
+                android:id="@+id/postsButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:src="@drawable/baseline_post_add_24"
+                android:background="?android:attr/selectableItemBackground"
+                android:contentDescription="Posts"/>
 
             <ImageButton
                 android:id="@+id/favoritesButton"
@@ -305,7 +348,9 @@
                 android:src="@drawable/ic_star_filled"
                 android:background="?android:attr/selectableItemBackground"
                 android:contentDescription="Favorites"/>
+
+
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-</RelativeLayout>
+</LinearLayout>

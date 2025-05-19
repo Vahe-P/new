@@ -6,14 +6,12 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.location.Location;
-import android.text.TextUtils;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -23,7 +21,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.core.content.res.ResourcesCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.RequestQueue;
@@ -31,15 +29,19 @@ import com.android.volley.toolbox.ImageRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 public class PlaceAdapter extends RecyclerView.Adapter<PlaceAdapter.PlaceViewHolder> {
 
@@ -175,6 +177,114 @@ public class PlaceAdapter extends RecyclerView.Adapter<PlaceAdapter.PlaceViewHol
             shareIntent.putExtra(Intent.EXTRA_TEXT, shareText);
             context.startActivity(Intent.createChooser(shareIntent, "Share via"));
         });
+        holder.commentsButton.setOnClickListener(v -> {
+            if (currentUser == null) {
+                Toast.makeText(context, "Please sign in to view comments", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Create bottom sheet dialog
+            BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(context);
+            View bottomSheetView = LayoutInflater.from(context).inflate(R.layout.bottom_sheet_comments, null);
+            bottomSheetDialog.setContentView(bottomSheetView);
+
+            // Initialize views
+            RecyclerView commentsRecyclerView = bottomSheetView.findViewById(R.id.commentsRecyclerView);
+            EditText commentInput = bottomSheetView.findViewById(R.id.commentInput);
+            ImageButton postButton = bottomSheetView.findViewById(R.id.postButton);
+            ImageButton closeButton = bottomSheetView.findViewById(R.id.closeButton);
+
+            // Setup RecyclerView
+            commentsRecyclerView.setLayoutManager(new LinearLayoutManager(context));
+            List<DocumentSnapshot> commentsList = new ArrayList<>();
+            CommentAdapter commentAdapter = new CommentAdapter(context, commentsList, place.getId());
+            commentsRecyclerView.setAdapter(commentAdapter);
+
+            // Load comments from Firestore
+            CollectionReference commentsRef = db.collection("places")
+                    .document(place.getId())
+                    .collection("comments");
+
+            commentsRef.orderBy("timestamp", Query.Direction.DESCENDING)
+                    .limit(50)
+                    .addSnapshotListener((snapshots, error) -> {
+                        if (error != null) return;
+                        commentsList.clear();
+                        if (snapshots != null) {
+                            commentsList.addAll(snapshots.getDocuments());
+                        }
+                        commentAdapter.notifyDataSetChanged();
+                    });
+
+            // Handle post button click
+            postButton.setOnClickListener(v1 -> {
+                String commentText = commentInput.getText().toString().trim();
+                if (!commentText.isEmpty()) {
+                    // Fetch user info for name and profile picture
+                    String userId = currentUser.getUid();
+                    Log.d("CommentDebug", "Fetching user info for userId: " + userId);
+                    Log.d("CommentDebug", "Current user email: " + currentUser.getEmail());
+                    Log.d("CommentDebug", "Current user is email verified: " + currentUser.isEmailVerified());
+
+                    db.collection("users").document(userId).get()
+                            .addOnSuccessListener(userDoc -> {
+                                if (userDoc.exists()) {
+                                    Log.d("CommentDebug", "User document exists");
+                                    String firstName = userDoc.getString("firstName");
+                                    String lastName = userDoc.getString("lastName");
+                                    String profilePictureUrl = userDoc.getString("profilePictureUrl");
+
+                                    Log.d("CommentDebug", "User data - firstName: " + firstName +
+                                            ", lastName: " + lastName +
+                                            ", profilePictureUrl: " + profilePictureUrl);
+
+                                    if (firstName == null) {
+                                        Log.e("CommentDebug", "User profile is incomplete - firstName is null");
+                                        Toast.makeText(context, "User profile is incomplete. Please update your profile.", Toast.LENGTH_LONG).show();
+                                        return;
+                                    }
+
+                                    String fullName = firstName + (lastName != null && !lastName.isEmpty() ? " " + lastName : "");
+
+                                    Map<String, Object> comment = new HashMap<>();
+                                    comment.put("userId", userId);
+                                    comment.put("userName", fullName);
+                                    comment.put("profilePictureUrl", profilePictureUrl);
+                                    comment.put("text", commentText);
+                                    comment.put("timestamp", System.currentTimeMillis());
+                                    comment.put("likes", new HashMap<String, Boolean>());
+
+                                    Log.d("CommentDebug", "Attempting to add comment to place: " + place.getId());
+                                    commentsRef.add(comment)
+                                            .addOnSuccessListener(documentReference -> {
+                                                Log.d("CommentDebug", "Comment added successfully with ID: " + documentReference.getId());
+                                                commentInput.setText("");
+                                                Toast.makeText(context, "Comment posted", Toast.LENGTH_SHORT).show();
+                                            })
+                                            .addOnFailureListener(e -> {
+                                                Log.e("CommentDebug", "Failed to post comment", e);
+                                                Toast.makeText(context, "Failed to post comment: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                            });
+                                } else {
+                                    Log.e("CommentDebug", "User document does not exist for userId: " + userId);
+                                    Toast.makeText(context, "User profile not found. Please update your profile.", Toast.LENGTH_LONG).show();
+                                }
+                            })
+                            .addOnFailureListener(e -> {
+                                Log.e("CommentDebug", "Failed to get user info", e);
+                                Toast.makeText(context, "Failed to get user info: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            });
+                } else {
+                    Toast.makeText(context, "Please enter a comment", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+            // Handle close button click
+            closeButton.setOnClickListener(v1 -> bottomSheetDialog.dismiss());
+
+            // Show the bottom sheet
+            bottomSheetDialog.show();
+        });
 
 
         // Handle click on the container
@@ -202,7 +312,7 @@ public class PlaceAdapter extends RecyclerView.Adapter<PlaceAdapter.PlaceViewHol
         LinearLayout containerLayout;
         ImageView placeImage;
         TextView placeName;
-        ImageButton starButton, shareButton;
+        ImageButton starButton, shareButton,commentsButton;
 
         public PlaceViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -211,6 +321,7 @@ public class PlaceAdapter extends RecyclerView.Adapter<PlaceAdapter.PlaceViewHol
             placeName = itemView.findViewById(R.id.placeName);
             starButton = itemView.findViewById(R.id.starButton);
             shareButton = itemView.findViewById(R.id.shareButton);
+            commentsButton = itemView.findViewById(R.id.commentsButton);
         }
     }
 }

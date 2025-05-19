@@ -48,5 +48,15 @@
             android:scaleType="fitCenter"
             android:adjustViewBounds="true"
             android:padding="4dp"/>
+        <ImageButton
+            android:id="@+id/commentsButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/baseline_comment_24"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:layout_margin="1dp"
+            android:scaleType="fitCenter"
+            android:adjustViewBounds="true"
+            android:padding="4dp"/>
     </LinearLayout>
 </LinearLayout>
