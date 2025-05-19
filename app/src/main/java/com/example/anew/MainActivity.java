@@ -302,6 +302,12 @@ public class MainActivity extends AppCompatActivity {
             intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
             startActivity(intent);
         });
+        ImageButton PostActivityButton = findViewById(R.id.postsButton);
+        PostActivityButton.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, PostsActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            startActivity(intent);
+        });
 
         btn.setOnClickListener(v ->{
             Intent intent = new Intent(MainActivity.this, ProfileActivity.class);
@@ -672,6 +678,7 @@ public class MainActivity extends AppCompatActivity {
                         if (documentSnapshot.exists()) {
                             Log.d("Recommendations", "Logged-in: Preferences document found.");
                             List<String> selectedPlaces = (List<String>) documentSnapshot.get("selectedPlaces");
+                            Log.d("Recommendations", "Logged-in: Raw preferences data: " + documentSnapshot.getData());
 
                             if (selectedPlaces == null || selectedPlaces.isEmpty()) {
                                 Log.d("Recommendations", "Logged-in: No specific preferences found or list is empty. Will load general recommendations.");
@@ -702,7 +709,7 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             }
                         } else {
-                             Log.d("Recommendations", "Logged-in: No preferences document found. Will load general recommendations.");
+                            Log.d("Recommendations", "Logged-in: No preferences document found. Will load general recommendations.");
                         }
                         // Load general recommendations regardless of preferences or if document doesn't exist
                         Log.d("Recommendations", "Logged-in: Fetching additional general recommendations.");
@@ -712,6 +719,7 @@ public class MainActivity extends AppCompatActivity {
                     })
                     .addOnFailureListener(e -> {
                         Log.e("Recommendations", "Logged-in: Failed to load preferences: " + e.getMessage(), e);
+                        Log.e("Recommendations", "Logged-in: Error type: " + e.getClass().getName());
                         Toast.makeText(this, "Failed to load preferences: " + e.getMessage(), Toast.LENGTH_LONG).show();
                         // Still try to load general recommendations on failure
                         Log.d("Recommendations", "Logged-in: Fetching general recommendations after preference load failure.");

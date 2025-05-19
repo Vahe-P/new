@@ -42,5 +42,14 @@ public class SourcesActivity extends AppCompatActivity {
                 startActivity(browserIntent);
             }
         });
+
+        // Set up OpenRouteService card
+        CardView orsCard = findViewById(R.id.orsCard);
+        orsCard.setOnClickListener(v -> {
+            // Open OpenRouteService website
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, 
+                Uri.parse("https://openrouteservice.org"));
+            startActivity(browserIntent);
+        });
     }
 } 

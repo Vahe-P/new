@@ -10,6 +10,10 @@ import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
+
 import java.util.concurrent.TimeUnit;
 
 public class MyApp extends Application {
@@ -18,6 +22,16 @@ public class MyApp extends Application {
     public void onCreate() {
         super.onCreate();
         Log.d("MyApp", "App started - checking for permissions and scheduling worker");
+
+        // Initialize Firebase
+        FirebaseApp.initializeApp(this);
+        
+        // Configure Firestore settings
+        FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+                .setPersistenceEnabled(true)
+                .build();
+        firestore.setFirestoreSettings(settings);
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || ContextCompat.checkSelfPermission(
                 this, android.Manifest.permission.POST_NOTIFICATIONS) ==

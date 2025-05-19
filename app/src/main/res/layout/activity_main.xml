@@ -240,6 +240,14 @@
             android:src="@drawable/baseline_explore_24"
             android:background="?android:attr/selectableItemBackground"
             android:contentDescription="Discover"/>
+        <ImageButton
+            android:id="@+id/postsButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:src="@drawable/baseline_post_add_24"
+            android:background="?android:attr/selectableItemBackground"
+            android:contentDescription="Posts"/>
 
         <ImageButton
             android:id="@+id/favoritesButton"

@@ -29,9 +29,10 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.android.material.textfield.TextInputEditText;
+import com.bumptech.glide.Glide;
 
 public class ProfileActivity extends AppCompatActivity {
-    private TextView userEmailTextView;
+    private TextView userName;
     private FirebaseAuth firebaseAuth;
     private FirebaseUser currentUser;
     private EditText searchBar;
@@ -69,7 +70,7 @@ public class ProfileActivity extends AppCompatActivity {
         firebaseAuth = FirebaseAuth.getInstance();
         currentUser = firebaseAuth.getCurrentUser();
 
-        userEmailTextView = findViewById(R.id.userEmailTextView);
+        userName = findViewById(R.id.userName);
         searchBar = findViewById(R.id.searchBar);
         prefer = findViewById(R.id.preferencesButton);
         
@@ -106,12 +107,41 @@ public class ProfileActivity extends AppCompatActivity {
         loadSavedData();
 
         if (currentUser != null) {
-            userEmailTextView.setText(currentUser.getEmail());
+            // Fetch user info from Firestore
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            db.collection("users").document(currentUser.getUid()).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        String firstName = documentSnapshot.getString("firstName");
+                        String lastName = documentSnapshot.getString("lastName");
+                        String fullName = firstName + (lastName != null && !lastName.isEmpty() ? " " + lastName : "");
+                        userName.setText(fullName);
+                        String profilePictureUrl = documentSnapshot.getString("profilePictureUrl");
+                        de.hdodenhof.circleimageview.CircleImageView profileImageView = findViewById(R.id.profileImageView);
+                        if (profilePictureUrl != null && !profilePictureUrl.isEmpty()) {
+                            Glide.with(this)
+                                .load(profilePictureUrl)
+                                .circleCrop()
+                                .into(profileImageView);
+                        } else {
+                            profileImageView.setImageResource(R.drawable.default_avatar);
+                        }
+                    } else {
+                        userName.setText(currentUser.getEmail());
+                    }
+                });
             accountManagementButtonsContainer.setVisibility(View.VISIBLE);
         } else {
-            userEmailTextView.setText("Guest Mode");
+            userName.setText("Guest Mode");
             accountManagementButtonsContainer.setVisibility(View.GONE);
         }
+
+        // Set up edit profile button to open EditProfileActivity
+        ImageButton editProfileButton = findViewById(R.id.editProfileButton);
+        editProfileButton.setOnClickListener(v -> {
+            Intent intent = new Intent(ProfileActivity.this, EditProfileActivity.class);
+            startActivity(intent);
+        });
 
         // Set up toggle group
         toggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
