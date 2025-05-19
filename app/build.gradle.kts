@@ -53,7 +53,6 @@ dependencies {
 
     implementation ("com.github.bumptech.glide:glide:4.15.1")
 
-
     implementation ("com.google.maps.android:android-maps-utils:2.3.0")
 
     implementation(libs.play.services.maps)

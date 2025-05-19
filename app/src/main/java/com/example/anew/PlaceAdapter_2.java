@@ -24,6 +24,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.ImageRequest;
 import com.android.volley.toolbox.Volley;
+
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.firebase.auth.FirebaseAuth;
@@ -39,12 +40,13 @@ import androidx.core.content.res.ResourcesCompat;
 
 public class PlaceAdapter_2 extends RecyclerView.Adapter<PlaceAdapter_2.ChurchViewHolder> {
 
-    private Context context; // Correct type for context
+    private Context context;
     private List<Place_2> churches;
     private Location userLocation;
     private FusedLocationProviderClient fusedLocationProviderClient;
-    private double userLng;
-    private double userLat;
+    public double userLng;
+    public double userLat;
+
     public PlaceAdapter_2(Context context, List<Place_2> churches,double userLat,double userLng) {
         this.context = context;
         this.churches = churches;
@@ -52,7 +54,6 @@ public class PlaceAdapter_2 extends RecyclerView.Adapter<PlaceAdapter_2.ChurchVi
         this.userLng=userLng;
 
         this.fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context);
-
         getUserLocation();
     }
 
@@ -61,13 +62,11 @@ public class PlaceAdapter_2 extends RecyclerView.Adapter<PlaceAdapter_2.ChurchVi
     public ChurchViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(context).inflate(R.layout.activity_place_adapter2, parent, false);
         return new ChurchViewHolder(view);
-
     }
 
     private void getUserLocation() {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
-            // Request location permission
             ActivityCompat.requestPermissions((android.app.Activity) context,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1001);
         } else {
@@ -90,19 +89,20 @@ public class PlaceAdapter_2 extends RecyclerView.Adapter<PlaceAdapter_2.ChurchVi
     public void onBindViewHolder(@NonNull ChurchViewHolder holder, int position) {
         Place_2 church = churches.get(position);
 
-        // Load Image with Volley
-        if (church.getImageUrl() != null) {
+        if (church.getImageUrl() != null && !church.getImageUrl().isEmpty()) {
             RequestQueue queue = Volley.newRequestQueue(context);
             ImageRequest imageRequest = new ImageRequest(church.getImageUrl(),
                     response -> holder.churchImage.setImageDrawable(new BitmapDrawable(context.getResources(), response)),
-                    0, 0, null, null,
-                    error -> Log.e("ImageLoadError", "Error loading image: " + error.getMessage()));
+                    0, 0, ImageView.ScaleType.CENTER_CROP, null,
+                    error -> {
+                        Log.e("ImageLoadError", "Error loading image: " + error.getMessage());
+                        holder.churchImage.setImageResource(R.drawable.download);
+                    });
             queue.add(imageRequest);
         } else {
             holder.churchImage.setImageResource(R.drawable.download);
         }
         Typeface customFont = ResourcesCompat.getFont(context, R.font.roboto_condensed_black);
-        // Set church name and distance
         holder.churchName.setTypeface(customFont);
         holder.churchDistance.setTypeface(customFont);
         holder.category.setTypeface(customFont);
@@ -110,7 +110,6 @@ public class PlaceAdapter_2 extends RecyclerView.Adapter<PlaceAdapter_2.ChurchVi
         holder.category.setText(church.getCategory());
         holder.churchName.setText(church.getName());
         holder.churchDistance.setText(church.getDistance());
-        holder.churchName.setText(church.getName());
         if (church.getName().length() > 20) {
             holder.churchName.setTextSize(14);
         } else if (church.getName().length() > 30) {
@@ -120,7 +119,6 @@ public class PlaceAdapter_2 extends RecyclerView.Adapter<PlaceAdapter_2.ChurchVi
 
         String placeId = church.getId();
 
-        // Handle star button for favorites
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
@@ -140,7 +138,6 @@ public class PlaceAdapter_2 extends RecyclerView.Adapter<PlaceAdapter_2.ChurchVi
                     isFavorite[0] = false;
                 }
             });
-
 
             holder.starButton.setOnClickListener(v -> {
                 isFavorite[0] = !isFavorite[0];
@@ -176,7 +173,6 @@ public class PlaceAdapter_2 extends RecyclerView.Adapter<PlaceAdapter_2.ChurchVi
             });
         }
 
-        // Handle share button
         holder.shareButton.setOnClickListener(v -> {
             String googleMapsUrl = "https://www.google.com/maps/search/?api=1&query=" + church.getLat() + "," + church.getLng();
             String shareText = "Check out this place: " + church.getName() + "\n" + googleMapsUrl;
@@ -186,10 +182,10 @@ public class PlaceAdapter_2 extends RecyclerView.Adapter<PlaceAdapter_2.ChurchVi
             shareIntent.putExtra(Intent.EXTRA_TEXT, shareText);
             context.startActivity(Intent.createChooser(shareIntent, "Share via"));
         });
-        // OnClickListener to open MapActivity
+
         holder.containerLayout.setOnClickListener(v -> {
             Intent intent = new Intent(context, MapActivity.class);
-            intent.putExtra("userLat", userLat); // User's current latitude
+            intent.putExtra("userLat", userLat);
             intent.putExtra("userLng", userLng);
             intent.putExtra("destLat", church.getLat());
             intent.putExtra("destLng", church.getLng());
@@ -204,12 +200,11 @@ public class PlaceAdapter_2 extends RecyclerView.Adapter<PlaceAdapter_2.ChurchVi
     public void clearData() {
         if (churches != null) {
             churches.clear();
-            notifyDataSetChanged(); // Notify the adapter
+            notifyDataSetChanged();
         }
     }
 
     public static class ChurchViewHolder extends RecyclerView.ViewHolder {
-
         LinearLayout containerLayout;
         ImageView churchImage;
         TextView churchName, churchDistance,category;
@@ -223,9 +218,7 @@ public class PlaceAdapter_2 extends RecyclerView.Adapter<PlaceAdapter_2.ChurchVi
             churchName = itemView.findViewById(R.id.placeName);
             churchDistance = itemView.findViewById(R.id.placeDistance);
             starButton = itemView.findViewById(R.id.starButton);
-            shareButton = itemView.findViewById(R.id.shareButton);// Ensure this TextView exists in the layout
+            shareButton = itemView.findViewById(R.id.shareButton);
         }
     }
-
-
 }

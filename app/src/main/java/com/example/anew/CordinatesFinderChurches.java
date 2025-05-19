@@ -28,6 +28,7 @@ public class CordinatesFinderChurches {
                 "&key=" + apiKey;
 
         RequestQueue queue = Volley.newRequestQueue(resultsContainer.getContext());
+
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
                 response -> {
                     try {
@@ -41,10 +42,8 @@ public class CordinatesFinderChurches {
                                 double lat = location.getDouble("lat");
                                 double lng = location.getDouble("lng");
                                 
-                                // Create a unique key for each place based on name and location
                                 String placeKey = name + "_" + lat + "_" + lng;
                                 
-                                // Skip if this place is already added
                                 if (addedPlaceKeys.contains(placeKey)) {
                                     continue;
                                 }
@@ -61,7 +60,6 @@ public class CordinatesFinderChurches {
                                         "&photo_reference=" + photoReference +
                                         "&key=" + apiKey;
 
-                                // Calculate distance text
                                 float[] results_2 = new float[1];
                                 android.location.Location.distanceBetween(userLat, userLng, lat, lng, results_2);
                                 String distanceText = String.format("%.1f km", results_2[0] / 1000);
@@ -70,27 +68,28 @@ public class CordinatesFinderChurches {
                                 addedPlaceKeys.add(placeKey);
                             }
                             
-                            // Add the results to the combined list and refresh the adapter
                             allResults.addAll(places);
                             new Handler(Looper.getMainLooper()).post(() -> {
                                 PlaceAdapter_2 adapter = new PlaceAdapter_2(resultsContainer.getContext(), allResults, userLat, userLng);
                                 resultsContainer.setAdapter(adapter);
                             });
                         } else {
-                            showToast(resultsContainer, "No results found for " + category);
+                            showToast(resultsContainer.getContext(), "No results found for " + category);
                         }
                     } catch (Exception e) {
-                        showToast(resultsContainer, "Error parsing the response");
+                        showToast(resultsContainer.getContext(), "Error parsing the response");
                     }
                 },
-                error -> showToast(resultsContainer, "No internet connection"));
+                error -> {
+                    showToast(resultsContainer.getContext(), "No internet connection");
+                });
 
         queue.add(request);
     }
 
-    private void showToast(RecyclerView resultsContainer, String message) {
+    private void showToast(Context context, String message) {
         new Handler(Looper.getMainLooper()).post(() -> 
-            Toast.makeText(resultsContainer.getContext(), message, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         );
     }
 
